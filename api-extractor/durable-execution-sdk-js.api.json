@@ -4142,6 +4142,627 @@
         },
         {
           "kind": "Function",
+          "canonicalReference": "@aws/durable-execution-sdk-js!createDistributedMapBatchHandler:function(1)",
+          "docComment": "/**\n * Wrap a Lambda as a reportBatchOutcome processor, where returning passes the batch and throwing fails it.\n *\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare function createDistributedMapBatchHandler<TItem>(fn: "
+            },
+            {
+              "kind": "Content",
+              "text": "(items: TItem[]) => void | "
+            },
+            {
+              "kind": "Reference",
+              "text": "Promise",
+              "canonicalReference": "!Promise:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "<void>"
+            },
+            {
+              "kind": "Content",
+              "text": ", opts?: "
+            },
+            {
+              "kind": "Content",
+              "text": "{\n    itemSerdes?: "
+            },
+            {
+              "kind": "Reference",
+              "text": "Serdes",
+              "canonicalReference": "@aws/durable-execution-sdk-js!Serdes:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "<TItem>;\n}"
+            },
+            {
+              "kind": "Content",
+              "text": "): "
+            },
+            {
+              "kind": "Content",
+              "text": "(event: unknown, context: "
+            },
+            {
+              "kind": "Reference",
+              "text": "Context",
+              "canonicalReference": "@types/aws-lambda!Context:interface"
+            },
+            {
+              "kind": "Content",
+              "text": ") => "
+            },
+            {
+              "kind": "Reference",
+              "text": "Promise",
+              "canonicalReference": "!Promise:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "<void>"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/distributed-map-helpers.ts",
+          "returnTypeTokenRange": {
+            "startIndex": 9,
+            "endIndex": 14
+          },
+          "releaseTag": "Public",
+          "overloadIndex": 1,
+          "parameters": [
+            {
+              "parameterName": "fn",
+              "parameterTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 4
+              },
+              "isOptional": false
+            },
+            {
+              "parameterName": "opts",
+              "parameterTypeTokenRange": {
+                "startIndex": 5,
+                "endIndex": 8
+              },
+              "isOptional": true
+            }
+          ],
+          "typeParameters": [
+            {
+              "typeParameterName": "TItem",
+              "constraintTokenRange": {
+                "startIndex": 0,
+                "endIndex": 0
+              },
+              "defaultTypeTokenRange": {
+                "startIndex": 0,
+                "endIndex": 0
+              }
+            }
+          ],
+          "name": "createDistributedMapBatchHandler"
+        },
+        {
+          "kind": "Function",
+          "canonicalReference": "@aws/durable-execution-sdk-js!createDistributedMapBatchHandlerWithDurableExecution:function(1)",
+          "docComment": "/**\n * Durable variant of the batch handler, fn receives (context, items).\n *\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare function createDistributedMapBatchHandlerWithDurableExecution<TItem>(fn: "
+            },
+            {
+              "kind": "Content",
+              "text": "(context: "
+            },
+            {
+              "kind": "Reference",
+              "text": "DurableContext",
+              "canonicalReference": "@aws/durable-execution-sdk-js!DurableContext:interface"
+            },
+            {
+              "kind": "Content",
+              "text": ", items: TItem[]) => void | "
+            },
+            {
+              "kind": "Reference",
+              "text": "Promise",
+              "canonicalReference": "!Promise:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "<void>"
+            },
+            {
+              "kind": "Content",
+              "text": ", opts?: "
+            },
+            {
+              "kind": "Content",
+              "text": "{\n    itemSerdes?: "
+            },
+            {
+              "kind": "Reference",
+              "text": "Serdes",
+              "canonicalReference": "@aws/durable-execution-sdk-js!Serdes:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "<TItem>;\n}"
+            },
+            {
+              "kind": "Content",
+              "text": "): "
+            },
+            {
+              "kind": "Reference",
+              "text": "DurableLambdaHandler",
+              "canonicalReference": "@aws/durable-execution-sdk-js!DurableLambdaHandler:type"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/distributed-map-helpers.ts",
+          "returnTypeTokenRange": {
+            "startIndex": 11,
+            "endIndex": 12
+          },
+          "releaseTag": "Public",
+          "overloadIndex": 1,
+          "parameters": [
+            {
+              "parameterName": "fn",
+              "parameterTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 6
+              },
+              "isOptional": false
+            },
+            {
+              "parameterName": "opts",
+              "parameterTypeTokenRange": {
+                "startIndex": 7,
+                "endIndex": 10
+              },
+              "isOptional": true
+            }
+          ],
+          "typeParameters": [
+            {
+              "typeParameterName": "TItem",
+              "constraintTokenRange": {
+                "startIndex": 0,
+                "endIndex": 0
+              },
+              "defaultTypeTokenRange": {
+                "startIndex": 0,
+                "endIndex": 0
+              }
+            }
+          ],
+          "name": "createDistributedMapBatchHandlerWithDurableExecution"
+        },
+        {
+          "kind": "Function",
+          "canonicalReference": "@aws/durable-execution-sdk-js!createDistributedMapItemHandler:function(1)",
+          "docComment": "/**\n * Wrap a Lambda as a reportItemResults processor (pass report \"failures\" for reportFailedItems).\n *\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare function createDistributedMapItemHandler<TItem, TOutput>(fn: "
+            },
+            {
+              "kind": "Content",
+              "text": "(item: TItem) => TOutput | "
+            },
+            {
+              "kind": "Reference",
+              "text": "Promise",
+              "canonicalReference": "!Promise:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "<TOutput>"
+            },
+            {
+              "kind": "Content",
+              "text": ", opts?: "
+            },
+            {
+              "kind": "Content",
+              "text": "{\n    itemSerdes?: "
+            },
+            {
+              "kind": "Reference",
+              "text": "Serdes",
+              "canonicalReference": "@aws/durable-execution-sdk-js!Serdes:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "<TItem>;\n    resultSerdes?: "
+            },
+            {
+              "kind": "Reference",
+              "text": "Serdes",
+              "canonicalReference": "@aws/durable-execution-sdk-js!Serdes:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "<TOutput>;\n    concurrency?: number;\n    report?: \"results\" | \"failures\";\n}"
+            },
+            {
+              "kind": "Content",
+              "text": "): "
+            },
+            {
+              "kind": "Content",
+              "text": "(event: unknown, context: "
+            },
+            {
+              "kind": "Reference",
+              "text": "Context",
+              "canonicalReference": "@types/aws-lambda!Context:interface"
+            },
+            {
+              "kind": "Content",
+              "text": ") => "
+            },
+            {
+              "kind": "Reference",
+              "text": "Promise",
+              "canonicalReference": "!Promise:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "<"
+            },
+            {
+              "kind": "Reference",
+              "text": "Record",
+              "canonicalReference": "!Record:type"
+            },
+            {
+              "kind": "Content",
+              "text": "<string, unknown>>"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/distributed-map-helpers.ts",
+          "returnTypeTokenRange": {
+            "startIndex": 11,
+            "endIndex": 18
+          },
+          "releaseTag": "Public",
+          "overloadIndex": 1,
+          "parameters": [
+            {
+              "parameterName": "fn",
+              "parameterTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 4
+              },
+              "isOptional": false
+            },
+            {
+              "parameterName": "opts",
+              "parameterTypeTokenRange": {
+                "startIndex": 5,
+                "endIndex": 10
+              },
+              "isOptional": true
+            }
+          ],
+          "typeParameters": [
+            {
+              "typeParameterName": "TItem",
+              "constraintTokenRange": {
+                "startIndex": 0,
+                "endIndex": 0
+              },
+              "defaultTypeTokenRange": {
+                "startIndex": 0,
+                "endIndex": 0
+              }
+            },
+            {
+              "typeParameterName": "TOutput",
+              "constraintTokenRange": {
+                "startIndex": 0,
+                "endIndex": 0
+              },
+              "defaultTypeTokenRange": {
+                "startIndex": 0,
+                "endIndex": 0
+              }
+            }
+          ],
+          "name": "createDistributedMapItemHandler"
+        },
+        {
+          "kind": "Function",
+          "canonicalReference": "@aws/durable-execution-sdk-js!createDistributedMapItemHandlerWithDurableExecution:function(1)",
+          "docComment": "/**\n * Durable variant of the item handler, fn receives (context, item).\n *\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare function createDistributedMapItemHandlerWithDurableExecution<TItem, TOutput>(fn: "
+            },
+            {
+              "kind": "Content",
+              "text": "(context: "
+            },
+            {
+              "kind": "Reference",
+              "text": "DurableContext",
+              "canonicalReference": "@aws/durable-execution-sdk-js!DurableContext:interface"
+            },
+            {
+              "kind": "Content",
+              "text": ", item: TItem) => TOutput | "
+            },
+            {
+              "kind": "Reference",
+              "text": "Promise",
+              "canonicalReference": "!Promise:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "<TOutput>"
+            },
+            {
+              "kind": "Content",
+              "text": ", opts?: "
+            },
+            {
+              "kind": "Content",
+              "text": "{\n    itemSerdes?: "
+            },
+            {
+              "kind": "Reference",
+              "text": "Serdes",
+              "canonicalReference": "@aws/durable-execution-sdk-js!Serdes:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "<TItem>;\n    resultSerdes?: "
+            },
+            {
+              "kind": "Reference",
+              "text": "Serdes",
+              "canonicalReference": "@aws/durable-execution-sdk-js!Serdes:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "<TOutput>;\n    report?: \"results\" | \"failures\";\n}"
+            },
+            {
+              "kind": "Content",
+              "text": "): "
+            },
+            {
+              "kind": "Reference",
+              "text": "DurableLambdaHandler",
+              "canonicalReference": "@aws/durable-execution-sdk-js!DurableLambdaHandler:type"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/distributed-map-helpers.ts",
+          "returnTypeTokenRange": {
+            "startIndex": 13,
+            "endIndex": 14
+          },
+          "releaseTag": "Public",
+          "overloadIndex": 1,
+          "parameters": [
+            {
+              "parameterName": "fn",
+              "parameterTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 6
+              },
+              "isOptional": false
+            },
+            {
+              "parameterName": "opts",
+              "parameterTypeTokenRange": {
+                "startIndex": 7,
+                "endIndex": 12
+              },
+              "isOptional": true
+            }
+          ],
+          "typeParameters": [
+            {
+              "typeParameterName": "TItem",
+              "constraintTokenRange": {
+                "startIndex": 0,
+                "endIndex": 0
+              },
+              "defaultTypeTokenRange": {
+                "startIndex": 0,
+                "endIndex": 0
+              }
+            },
+            {
+              "typeParameterName": "TOutput",
+              "constraintTokenRange": {
+                "startIndex": 0,
+                "endIndex": 0
+              },
+              "defaultTypeTokenRange": {
+                "startIndex": 0,
+                "endIndex": 0
+              }
+            }
+          ],
+          "name": "createDistributedMapItemHandlerWithDurableExecution"
+        },
+        {
+          "kind": "Function",
+          "canonicalReference": "@aws/durable-execution-sdk-js!createDistributedMapReader:function(1)",
+          "docComment": "/**\n * Wrap a Lambda as a reader source, a missing nextState means the source is exhausted.\n *\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare function createDistributedMapReader<TItem, TState>(fn: "
+            },
+            {
+              "kind": "Content",
+              "text": "(state: TState | undefined) => "
+            },
+            {
+              "kind": "Reference",
+              "text": "ReaderPage",
+              "canonicalReference": "@aws/durable-execution-sdk-js!ReaderPage:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "<TItem, TState> | "
+            },
+            {
+              "kind": "Reference",
+              "text": "Promise",
+              "canonicalReference": "!Promise:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "<"
+            },
+            {
+              "kind": "Reference",
+              "text": "ReaderPage",
+              "canonicalReference": "@aws/durable-execution-sdk-js!ReaderPage:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "<TItem, TState>>"
+            },
+            {
+              "kind": "Content",
+              "text": ", opts?: "
+            },
+            {
+              "kind": "Content",
+              "text": "{\n    stateSerdes?: "
+            },
+            {
+              "kind": "Reference",
+              "text": "Serdes",
+              "canonicalReference": "@aws/durable-execution-sdk-js!Serdes:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "<TState>;\n}"
+            },
+            {
+              "kind": "Content",
+              "text": "): "
+            },
+            {
+              "kind": "Content",
+              "text": "(event: unknown, context: "
+            },
+            {
+              "kind": "Reference",
+              "text": "Context",
+              "canonicalReference": "@types/aws-lambda!Context:interface"
+            },
+            {
+              "kind": "Content",
+              "text": ") => "
+            },
+            {
+              "kind": "Reference",
+              "text": "Promise",
+              "canonicalReference": "!Promise:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "<"
+            },
+            {
+              "kind": "Reference",
+              "text": "Record",
+              "canonicalReference": "!Record:type"
+            },
+            {
+              "kind": "Content",
+              "text": "<string, unknown>>"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/distributed-map-helpers.ts",
+          "returnTypeTokenRange": {
+            "startIndex": 13,
+            "endIndex": 20
+          },
+          "releaseTag": "Public",
+          "overloadIndex": 1,
+          "parameters": [
+            {
+              "parameterName": "fn",
+              "parameterTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 8
+              },
+              "isOptional": false
+            },
+            {
+              "parameterName": "opts",
+              "parameterTypeTokenRange": {
+                "startIndex": 9,
+                "endIndex": 12
+              },
+              "isOptional": true
+            }
+          ],
+          "typeParameters": [
+            {
+              "typeParameterName": "TItem",
+              "constraintTokenRange": {
+                "startIndex": 0,
+                "endIndex": 0
+              },
+              "defaultTypeTokenRange": {
+                "startIndex": 0,
+                "endIndex": 0
+              }
+            },
+            {
+              "typeParameterName": "TState",
+              "constraintTokenRange": {
+                "startIndex": 0,
+                "endIndex": 0
+              },
+              "defaultTypeTokenRange": {
+                "startIndex": 0,
+                "endIndex": 0
+              }
+            }
+          ],
+          "name": "createDistributedMapReader"
+        },
+        {
+          "kind": "Function",
           "canonicalReference": "@aws/durable-execution-sdk-js!createFileSystemSerdes:function(1)",
           "docComment": "/**\n * Creates a Serdes that stores serialized values on a durable filesystem.\n *\n * **⚠️ WARNING: Do NOT use with Lambda's ephemeral `/tmp` storage.** Lambda's `/tmp` filesystem is local to a single execution environment and is not shared across invocations or function instances. On replay, a different execution environment may be used and the file will not be found, causing deserialization to fail.\n *\n * **Use only with a durable, shared filesystem such as:** - **Amazon S3 Files** — mount an S3 bucket as a filesystem via the Lambda console or IaC - **Amazon EFS** — mount an EFS file system to your Lambda function\n *\n * Both options provide persistence across invocations and are accessible from multiple concurrent function instances, which is required for correct replay behavior.\n *\n * The checkpoint stores a JSON envelope that is either: - `{\"data\":\"<inline JSON>\"}` — value stored inline (OVERFLOW mode, under threshold) - `{\"file\":\"<path>\"}` — value stored in a file - `{\"file\":\"<path>\",\"preview\":{...}}` — file pointer with inline preview (when preview is configured)\n *\n * @param basePath - Directory path where data files will be stored (e.g. `/mnt/s3` for S3 Files, `/mnt/efs` for EFS)\n *\n * @param config - Optional configuration options\n *\n * @returns A Serdes that reads/writes JSON files under basePath\n *\n * @example\n * ```typescript\n * // Always write to S3 Files mount (default)\n * context.configureSerdes({\n *   defaultSerdes: createFileSystemSerdes(\"/mnt/s3\"),\n * });\n *\n * // Only overflow to filesystem when payload exceeds ~256KB\n * context.configureSerdes({\n *   defaultSerdes: createFileSystemSerdes(\"/mnt/s3\", { storageMode: FileSystemSerdesMode.OVERFLOW }),\n * });\n *\n * // With preview: show id and masked email in checkpoint\n * context.configureSerdes({\n *   defaultSerdes: createFileSystemSerdes(\"/mnt/s3\", {\n *     generatePreview: (value) => buildPreview(value, {\n *       mode: PreviewMode.EXCLUDE_ALL,\n *       include: [{ name: \"id\" }, { name: \"status\" }],\n *       mask: [{ name: \"email\" }],\n *     }),\n *   }),\n * });\n * ```\n *\n * Limitations: - Field names containing dots are not supported in preview field selectors. A dot in a field name is indistinguishable from a path separator. - Array structure is not preserved in preview output — fields from array elements are merged into a plain object at the array's path.\n *\n * @public\n */\n",
           "excerptTokens": [
@@ -4380,6 +5001,32 @@
           "name": "createWaitStrategy"
         },
         {
+          "kind": "TypeAlias",
+          "canonicalReference": "@aws/durable-execution-sdk-js!CsvDelimiter:type",
+          "docComment": "/**\n * CSV field delimiter.\n *\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export type CsvDelimiter = "
+            },
+            {
+              "kind": "Content",
+              "text": "\"COMMA\" | \"PIPE\" | \"SEMICOLON\" | \"SPACE\" | \"TAB\""
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/types/distributed-map.ts",
+          "releaseTag": "Public",
+          "name": "CsvDelimiter",
+          "typeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 2
+          }
+        },
+        {
           "kind": "Interface",
           "canonicalReference": "@aws/durable-execution-sdk-js!CustomCompletionConfig:interface",
           "docComment": "/**\n * Custom completion for map/parallel operations, driven by a predicate.\n *\n * @public\n */\n",
@@ -4546,6 +5193,1592 @@
             "startIndex": 1,
             "endIndex": 3
           }
+        },
+        {
+          "kind": "TypeAlias",
+          "canonicalReference": "@aws/durable-execution-sdk-js!DistributedMapCompletionConfig:type",
+          "docComment": "/**\n * Failure tolerance for the run, count and percentage are mutually exclusive.\n *\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export type DistributedMapCompletionConfig = "
+            },
+            {
+              "kind": "Content",
+              "text": "{\n    toleratedFailureCount: number;\n    toleratedFailurePercentage?: never;\n    minimumSampleSize?: never;\n} | {\n    toleratedFailurePercentage: number;\n    minimumSampleSize?: number;\n    toleratedFailureCount?: never;\n}"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/types/distributed-map.ts",
+          "releaseTag": "Public",
+          "name": "DistributedMapCompletionConfig",
+          "typeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 2
+          }
+        },
+        {
+          "kind": "TypeAlias",
+          "canonicalReference": "@aws/durable-execution-sdk-js!DistributedMapCompletionReason:type",
+          "docComment": "/**\n * Reason a distributed map run reached its terminal status.\n *\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export type DistributedMapCompletionReason = "
+            },
+            {
+              "kind": "Content",
+              "text": "(typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "DISTRIBUTED_MAP_COMPLETION_REASONS",
+              "canonicalReference": "@aws/durable-execution-sdk-js!~DISTRIBUTED_MAP_COMPLETION_REASONS:var"
+            },
+            {
+              "kind": "Content",
+              "text": ")[number]"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/types/distributed-map.ts",
+          "releaseTag": "Public",
+          "name": "DistributedMapCompletionReason",
+          "typeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 4
+          }
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "@aws/durable-execution-sdk-js!DistributedMapConfig:interface",
+          "docComment": "/**\n * Optional settings for a distributed map run.\n *\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface DistributedMapConfig<TOutput> "
+            }
+          ],
+          "fileUrlPath": "src/types/distributed-map.ts",
+          "releaseTag": "Public",
+          "typeParameters": [
+            {
+              "typeParameterName": "TOutput",
+              "constraintTokenRange": {
+                "startIndex": 0,
+                "endIndex": 0
+              },
+              "defaultTypeTokenRange": {
+                "startIndex": 0,
+                "endIndex": 0
+              }
+            }
+          ],
+          "name": "DistributedMapConfig",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@aws/durable-execution-sdk-js!DistributedMapConfig#collectResults:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "collectResults?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "boolean"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "collectResults",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@aws/durable-execution-sdk-js!DistributedMapConfig#completionConfig:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "completionConfig?: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "DistributedMapCompletionConfig",
+                  "canonicalReference": "@aws/durable-execution-sdk-js!DistributedMapCompletionConfig:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "completionConfig",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@aws/durable-execution-sdk-js!DistributedMapConfig#destination:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "destination?: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "DistributedMapDestinationConfig",
+                  "canonicalReference": "@aws/durable-execution-sdk-js!DistributedMapDestinationConfig:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "destination",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@aws/durable-execution-sdk-js!DistributedMapConfig#resultSerdes:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "resultSerdes?: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Serdes",
+                  "canonicalReference": "@aws/durable-execution-sdk-js!Serdes:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<TOutput>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "resultSerdes",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 3
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@aws/durable-execution-sdk-js!DistributedMapConfig#timeout:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "timeout?: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Duration",
+                  "canonicalReference": "@aws/durable-execution-sdk-js!Duration:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "timeout",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
+          "kind": "Variable",
+          "canonicalReference": "@aws/durable-execution-sdk-js!DistributedMapDestination:var",
+          "docComment": "/**\n * Factories for distributed map destinations.\n *\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "DistributedMapDestination: "
+            },
+            {
+              "kind": "Content",
+              "text": "{\n    s3: {\n        successes(uri: string, opts?: {\n            includeInput?: boolean;\n            includeOutput?: boolean;\n            expectedBucketOwner?: string;\n        }): "
+            },
+            {
+              "kind": "Reference",
+              "text": "SuccessDestination",
+              "canonicalReference": "@aws/durable-execution-sdk-js!SuccessDestination:interface"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n        failures(uri: string, opts?: {\n            includeInput?: boolean;\n            includeError?: boolean;\n            expectedBucketOwner?: string;\n        }): "
+            },
+            {
+              "kind": "Reference",
+              "text": "FailureDestination",
+              "canonicalReference": "@aws/durable-execution-sdk-js!FailureDestination:interface"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n    };\n}"
+            }
+          ],
+          "fileUrlPath": "src/types/distributed-map.ts",
+          "isReadonly": true,
+          "releaseTag": "Public",
+          "name": "DistributedMapDestination",
+          "variableTypeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 6
+          }
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "@aws/durable-execution-sdk-js!DistributedMapDestinationConfig:interface",
+          "docComment": "/**\n * Where the service writes item input, output, and error records.\n *\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface DistributedMapDestinationConfig "
+            }
+          ],
+          "fileUrlPath": "src/types/distributed-map.ts",
+          "releaseTag": "Public",
+          "name": "DistributedMapDestinationConfig",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@aws/durable-execution-sdk-js!DistributedMapDestinationConfig#onFailure:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "onFailure?: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "FailureDestination",
+                  "canonicalReference": "@aws/durable-execution-sdk-js!FailureDestination:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "onFailure",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@aws/durable-execution-sdk-js!DistributedMapDestinationConfig#onSuccess:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "onSuccess?: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "SuccessDestination",
+                  "canonicalReference": "@aws/durable-execution-sdk-js!SuccessDestination:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "onSuccess",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
+          "kind": "Class",
+          "canonicalReference": "@aws/durable-execution-sdk-js!DistributedMapError:class",
+          "docComment": "/**\n * Error thrown when a distributed map run does not fully succeed\n *\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export declare class DistributedMapError extends "
+            },
+            {
+              "kind": "Reference",
+              "text": "DurableOperationError",
+              "canonicalReference": "@aws/durable-execution-sdk-js!DurableOperationError:class"
+            },
+            {
+              "kind": "Content",
+              "text": " "
+            }
+          ],
+          "fileUrlPath": "src/errors/durable-error/durable-error.ts",
+          "releaseTag": "Public",
+          "isAbstract": false,
+          "name": "DistributedMapError",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "Constructor",
+              "canonicalReference": "@aws/durable-execution-sdk-js!DistributedMapError:constructor(1)",
+              "docComment": "/**\n * Constructs a new instance of the `DistributedMapError` class\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "constructor(message?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ", cause?: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Error",
+                  "canonicalReference": "!Error:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ", errorData?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ");"
+                }
+              ],
+              "releaseTag": "Public",
+              "isProtected": false,
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "message",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  },
+                  "isOptional": true
+                },
+                {
+                  "parameterName": "cause",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 3,
+                    "endIndex": 4
+                  },
+                  "isOptional": true
+                },
+                {
+                  "parameterName": "errorData",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 5,
+                    "endIndex": 6
+                  },
+                  "isOptional": true
+                }
+              ]
+            },
+            {
+              "kind": "Property",
+              "canonicalReference": "@aws/durable-execution-sdk-js!DistributedMapError#errorType:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly errorType = "
+                },
+                {
+                  "kind": "Content",
+                  "text": "\"DistributedMapError\""
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": true,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "errorType",
+              "propertyTypeTokenRange": {
+                "startIndex": 0,
+                "endIndex": 0
+              },
+              "initializerTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isStatic": false,
+              "isProtected": false,
+              "isAbstract": false
+            }
+          ],
+          "extendsTokenRange": {
+            "startIndex": 1,
+            "endIndex": 2
+          },
+          "implementsTokenRanges": []
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "@aws/durable-execution-sdk-js!DistributedMapItemError:interface",
+          "docComment": "/**\n * Error recorded for a single failed item.\n *\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface DistributedMapItemError "
+            }
+          ],
+          "fileUrlPath": "src/types/distributed-map.ts",
+          "releaseTag": "Public",
+          "name": "DistributedMapItemError",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@aws/durable-execution-sdk-js!DistributedMapItemError#errorMessage:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "errorMessage: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "errorMessage",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@aws/durable-execution-sdk-js!DistributedMapItemError#errorType:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "errorType: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "errorType",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "@aws/durable-execution-sdk-js!DistributedMapProcessor:interface",
+          "docComment": "/**\n * A distributed map processor, built with the factories on {@link (DistributedMapProcessor:variable)}.\n *\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface DistributedMapProcessor<TOutput> "
+            }
+          ],
+          "fileUrlPath": "src/types/distributed-map.ts",
+          "releaseTag": "Public",
+          "typeParameters": [
+            {
+              "typeParameterName": "TOutput",
+              "constraintTokenRange": {
+                "startIndex": 0,
+                "endIndex": 0
+              },
+              "defaultTypeTokenRange": {
+                "startIndex": 0,
+                "endIndex": 0
+              }
+            }
+          ],
+          "name": "DistributedMapProcessor",
+          "preserveMemberOrder": false,
+          "members": [],
+          "extendsTokenRanges": []
+        },
+        {
+          "kind": "Variable",
+          "canonicalReference": "@aws/durable-execution-sdk-js!DistributedMapProcessor:var",
+          "docComment": "/**\n * Factories for a distributed map processor.\n *\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "DistributedMapProcessor: "
+            },
+            {
+              "kind": "Content",
+              "text": "{\n    reportBatchOutcome(functionName: string, opts?: {\n        batchSize?: number;\n        retry?: "
+            },
+            {
+              "kind": "Reference",
+              "text": "ProcessorRetryConfig",
+              "canonicalReference": "@aws/durable-execution-sdk-js!ProcessorRetryConfig:interface"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n        durableExecutionNamePrefix?: string;\n    }): "
+            },
+            {
+              "kind": "Reference",
+              "text": "DistributedMapProcessor",
+              "canonicalReference": "@aws/durable-execution-sdk-js!DistributedMapProcessor:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "<never>;\n    reportFailedItems(functionName: string, opts?: {\n        batchSize?: number;\n        retry?: "
+            },
+            {
+              "kind": "Reference",
+              "text": "ProcessorRetryConfig",
+              "canonicalReference": "@aws/durable-execution-sdk-js!ProcessorRetryConfig:interface"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n        durableExecutionNamePrefix?: string;\n    }): "
+            },
+            {
+              "kind": "Reference",
+              "text": "DistributedMapProcessor",
+              "canonicalReference": "@aws/durable-execution-sdk-js!DistributedMapProcessor:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "<never>;\n    reportItemResults<TOutput>(functionName: string, opts?: {\n        batchSize?: number;\n        retry?: "
+            },
+            {
+              "kind": "Reference",
+              "text": "ProcessorRetryConfig",
+              "canonicalReference": "@aws/durable-execution-sdk-js!ProcessorRetryConfig:interface"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n        durableExecutionNamePrefix?: string;\n    }): "
+            },
+            {
+              "kind": "Reference",
+              "text": "DistributedMapProcessor",
+              "canonicalReference": "@aws/durable-execution-sdk-js!DistributedMapProcessor:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "<TOutput>;\n}"
+            }
+          ],
+          "fileUrlPath": "src/types/distributed-map.ts",
+          "isReadonly": true,
+          "releaseTag": "Public",
+          "name": "DistributedMapProcessor",
+          "variableTypeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 14
+          }
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "@aws/durable-execution-sdk-js!DistributedMapResult:interface",
+          "docComment": "/**\n * A resolved distributed map run with per-item results (collectResults: true).\n *\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface DistributedMapResult<TOutput> extends "
+            },
+            {
+              "kind": "Reference",
+              "text": "DistributedMapSummary",
+              "canonicalReference": "@aws/durable-execution-sdk-js!DistributedMapSummary:interface"
+            },
+            {
+              "kind": "Content",
+              "text": " "
+            }
+          ],
+          "fileUrlPath": "src/types/distributed-map.ts",
+          "releaseTag": "Public",
+          "typeParameters": [
+            {
+              "typeParameterName": "TOutput",
+              "constraintTokenRange": {
+                "startIndex": 0,
+                "endIndex": 0
+              },
+              "defaultTypeTokenRange": {
+                "startIndex": 0,
+                "endIndex": 0
+              }
+            }
+          ],
+          "name": "DistributedMapResult",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@aws/durable-execution-sdk-js!DistributedMapResult#all:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "all: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Array",
+                  "canonicalReference": "!Array:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<"
+                },
+                {
+                  "kind": "Reference",
+                  "text": "DistributedMapResultItem",
+                  "canonicalReference": "@aws/durable-execution-sdk-js!DistributedMapResultItem:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<TOutput>>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "all",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 5
+              }
+            },
+            {
+              "kind": "MethodSignature",
+              "canonicalReference": "@aws/durable-execution-sdk-js!DistributedMapResult#failed:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "failed(): "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Array",
+                  "canonicalReference": "!Array:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<"
+                },
+                {
+                  "kind": "Reference",
+                  "text": "DistributedMapResultItem",
+                  "canonicalReference": "@aws/durable-execution-sdk-js!DistributedMapResultItem:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<TOutput> & {\n        status: \"FAILED\";\n    }>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "returnTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 5
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [],
+              "name": "failed"
+            },
+            {
+              "kind": "MethodSignature",
+              "canonicalReference": "@aws/durable-execution-sdk-js!DistributedMapResult#getErrors:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "getErrors(): "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Array",
+                  "canonicalReference": "!Array:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<"
+                },
+                {
+                  "kind": "Reference",
+                  "text": "DistributedMapItemError",
+                  "canonicalReference": "@aws/durable-execution-sdk-js!DistributedMapItemError:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ">"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "returnTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 5
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [],
+              "name": "getErrors"
+            },
+            {
+              "kind": "MethodSignature",
+              "canonicalReference": "@aws/durable-execution-sdk-js!DistributedMapResult#getResults:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "getResults(): "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Array",
+                  "canonicalReference": "!Array:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<TOutput>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "returnTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 3
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [],
+              "name": "getResults"
+            },
+            {
+              "kind": "MethodSignature",
+              "canonicalReference": "@aws/durable-execution-sdk-js!DistributedMapResult#succeeded:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "succeeded(): "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Array",
+                  "canonicalReference": "!Array:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<"
+                },
+                {
+                  "kind": "Reference",
+                  "text": "DistributedMapResultItem",
+                  "canonicalReference": "@aws/durable-execution-sdk-js!DistributedMapResultItem:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<TOutput> & {\n        status: \"SUCCEEDED\";\n    }>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "returnTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 5
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [],
+              "name": "succeeded"
+            }
+          ],
+          "extendsTokenRanges": [
+            {
+              "startIndex": 1,
+              "endIndex": 2
+            }
+          ]
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "@aws/durable-execution-sdk-js!DistributedMapResultItem:interface",
+          "docComment": "/**\n * A single item outcome in a collected distributed map result.\n *\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface DistributedMapResultItem<TOutput> "
+            }
+          ],
+          "fileUrlPath": "src/types/distributed-map.ts",
+          "releaseTag": "Public",
+          "typeParameters": [
+            {
+              "typeParameterName": "TOutput",
+              "constraintTokenRange": {
+                "startIndex": 0,
+                "endIndex": 0
+              },
+              "defaultTypeTokenRange": {
+                "startIndex": 0,
+                "endIndex": 0
+              }
+            }
+          ],
+          "name": "DistributedMapResultItem",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@aws/durable-execution-sdk-js!DistributedMapResultItem#error:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "error?: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "DistributedMapItemError",
+                  "canonicalReference": "@aws/durable-execution-sdk-js!DistributedMapItemError:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "error",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@aws/durable-execution-sdk-js!DistributedMapResultItem#itemId:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "itemId: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "itemId",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@aws/durable-execution-sdk-js!DistributedMapResultItem#output:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "output?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "TOutput"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "output",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@aws/durable-execution-sdk-js!DistributedMapResultItem#status:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "status: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "\"SUCCEEDED\" | \"FAILED\""
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "status",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "@aws/durable-execution-sdk-js!DistributedMapSource:interface",
+          "docComment": "/**\n * A distributed map source, built with the factories on {@link (DistributedMapSource:variable)}.\n *\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface DistributedMapSource<TItem> "
+            }
+          ],
+          "fileUrlPath": "src/types/distributed-map.ts",
+          "releaseTag": "Public",
+          "typeParameters": [
+            {
+              "typeParameterName": "TItem",
+              "constraintTokenRange": {
+                "startIndex": 0,
+                "endIndex": 0
+              },
+              "defaultTypeTokenRange": {
+                "startIndex": 0,
+                "endIndex": 0
+              }
+            }
+          ],
+          "name": "DistributedMapSource",
+          "preserveMemberOrder": false,
+          "members": [],
+          "extendsTokenRanges": []
+        },
+        {
+          "kind": "Variable",
+          "canonicalReference": "@aws/durable-execution-sdk-js!DistributedMapSource:var",
+          "docComment": "/**\n * Factories for a distributed map source.\n *\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "DistributedMapSource: "
+            },
+            {
+              "kind": "Content",
+              "text": "{\n    inline<T>(items: T[], opts?: {\n        serdes?: "
+            },
+            {
+              "kind": "Reference",
+              "text": "Serdes",
+              "canonicalReference": "@aws/durable-execution-sdk-js!Serdes:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "<T>;\n        maxItems?: number;\n    }): "
+            },
+            {
+              "kind": "Reference",
+              "text": "DistributedMapSource",
+              "canonicalReference": "@aws/durable-execution-sdk-js!DistributedMapSource:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "<T>;\n    s3: {\n        jsonLines<T = unknown>(uri: string, opts?: {\n            expectedBucketOwner?: string;\n            maxItems?: number;\n        }): "
+            },
+            {
+              "kind": "Reference",
+              "text": "DistributedMapSource",
+              "canonicalReference": "@aws/durable-execution-sdk-js!DistributedMapSource:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "<T>;\n        jsonArray<T = unknown>(uri: string, opts?: {\n            expectedBucketOwner?: string;\n            maxItems?: number;\n        }): "
+            },
+            {
+              "kind": "Reference",
+              "text": "DistributedMapSource",
+              "canonicalReference": "@aws/durable-execution-sdk-js!DistributedMapSource:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "<T>;\n        csv<T = "
+            },
+            {
+              "kind": "Reference",
+              "text": "Record",
+              "canonicalReference": "!Record:type"
+            },
+            {
+              "kind": "Content",
+              "text": "<string, string | null>>(uri: string, opts?: {\n            headers?: string[];\n            expectedColumns?: string[];\n            delimiter?: "
+            },
+            {
+              "kind": "Reference",
+              "text": "CsvDelimiter",
+              "canonicalReference": "@aws/durable-execution-sdk-js!CsvDelimiter:type"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n            expectedBucketOwner?: string;\n            maxItems?: number;\n        }): "
+            },
+            {
+              "kind": "Reference",
+              "text": "DistributedMapSource",
+              "canonicalReference": "@aws/durable-execution-sdk-js!DistributedMapSource:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "<T>;\n        objects<T = unknown>(prefixUri: string, opts?: {\n            expectedBucketOwner?: string;\n            maxItems?: number;\n        }): "
+            },
+            {
+              "kind": "Reference",
+              "text": "DistributedMapSource",
+              "canonicalReference": "@aws/durable-execution-sdk-js!DistributedMapSource:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "<T>;\n        flattenedJsonLines<T = unknown>(prefixUri: string, opts?: {\n            expectedBucketOwner?: string;\n            maxItems?: number;\n        }): "
+            },
+            {
+              "kind": "Reference",
+              "text": "DistributedMapSource",
+              "canonicalReference": "@aws/durable-execution-sdk-js!DistributedMapSource:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "<T>;\n        flattenedJsonArray<T = unknown>(prefixUri: string, opts?: {\n            expectedBucketOwner?: string;\n            maxItems?: number;\n        }): "
+            },
+            {
+              "kind": "Reference",
+              "text": "DistributedMapSource",
+              "canonicalReference": "@aws/durable-execution-sdk-js!DistributedMapSource:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "<T>;\n        flattenedCsv<T = "
+            },
+            {
+              "kind": "Reference",
+              "text": "Record",
+              "canonicalReference": "!Record:type"
+            },
+            {
+              "kind": "Content",
+              "text": "<string, string | null>>(prefixUri: string, opts?: {\n            headers?: string[];\n            expectedColumns?: string[];\n            delimiter?: "
+            },
+            {
+              "kind": "Reference",
+              "text": "CsvDelimiter",
+              "canonicalReference": "@aws/durable-execution-sdk-js!CsvDelimiter:type"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n            expectedBucketOwner?: string;\n            maxItems?: number;\n        }): "
+            },
+            {
+              "kind": "Reference",
+              "text": "DistributedMapSource",
+              "canonicalReference": "@aws/durable-execution-sdk-js!DistributedMapSource:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "<T>;\n    };\n    reader: {\n        fromFunction<TItem = unknown, TState = unknown>(functionName: string, opts?: {\n            initialState?: TState;\n            stateSerdes?: "
+            },
+            {
+              "kind": "Reference",
+              "text": "Serdes",
+              "canonicalReference": "@aws/durable-execution-sdk-js!Serdes:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "<TState>;\n            maxItems?: number;\n        }): "
+            },
+            {
+              "kind": "Reference",
+              "text": "DistributedMapSource",
+              "canonicalReference": "@aws/durable-execution-sdk-js!DistributedMapSource:interface"
+            },
+            {
+              "kind": "Content",
+              "text": "<TItem>;\n    };\n}"
+            }
+          ],
+          "fileUrlPath": "src/types/distributed-map.ts",
+          "isReadonly": true,
+          "releaseTag": "Public",
+          "name": "DistributedMapSource",
+          "variableTypeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 32
+          }
+        },
+        {
+          "kind": "TypeAlias",
+          "canonicalReference": "@aws/durable-execution-sdk-js!DistributedMapStatus:type",
+          "docComment": "/**\n * Terminal status of a distributed map run.\n *\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export type DistributedMapStatus = "
+            },
+            {
+              "kind": "Content",
+              "text": "(typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "DISTRIBUTED_MAP_STATUSES",
+              "canonicalReference": "@aws/durable-execution-sdk-js!~DISTRIBUTED_MAP_STATUSES:var"
+            },
+            {
+              "kind": "Content",
+              "text": ")[number]"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "fileUrlPath": "src/types/distributed-map.ts",
+          "releaseTag": "Public",
+          "name": "DistributedMapStatus",
+          "typeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 4
+          }
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "@aws/durable-execution-sdk-js!DistributedMapSummary:interface",
+          "docComment": "/**\n * Summary of a resolved distributed map run.\n *\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface DistributedMapSummary "
+            }
+          ],
+          "fileUrlPath": "src/types/distributed-map.ts",
+          "releaseTag": "Public",
+          "name": "DistributedMapSummary",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@aws/durable-execution-sdk-js!DistributedMapSummary#completionDetails:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "completionDetails?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "completionDetails",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@aws/durable-execution-sdk-js!DistributedMapSummary#completionReason:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "completionReason: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "DistributedMapCompletionReason",
+                  "canonicalReference": "@aws/durable-execution-sdk-js!DistributedMapCompletionReason:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "completionReason",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@aws/durable-execution-sdk-js!DistributedMapSummary#distributedMapId:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "distributedMapId?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "distributedMapId",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@aws/durable-execution-sdk-js!DistributedMapSummary#distributedMapRunArn:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "distributedMapRunArn?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "distributedMapRunArn",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@aws/durable-execution-sdk-js!DistributedMapSummary#failureCount:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "failureCount: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "number"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "failureCount",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@aws/durable-execution-sdk-js!DistributedMapSummary#hasFailure:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "hasFailure: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "boolean"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "hasFailure",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@aws/durable-execution-sdk-js!DistributedMapSummary#status:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "status: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "DistributedMapStatus",
+                  "canonicalReference": "@aws/durable-execution-sdk-js!DistributedMapStatus:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "status",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@aws/durable-execution-sdk-js!DistributedMapSummary#successCount:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "successCount: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "number"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "successCount",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "MethodSignature",
+              "canonicalReference": "@aws/durable-execution-sdk-js!DistributedMapSummary#throwIfError:member(1)",
+              "docComment": "/**\n * Throws {@link DistributedMapError} when the run did not fully succeed.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "throwIfError(): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "void"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "returnTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [],
+              "name": "throwIfError"
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@aws/durable-execution-sdk-js!DistributedMapSummary#totalCount:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "totalCount?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "number"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "totalCount",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@aws/durable-execution-sdk-js!DistributedMapSummary#unprocessedCount:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "unprocessedCount: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "number"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "unprocessedCount",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "extendsTokenRanges": []
         },
         {
           "kind": "Variable",
@@ -4901,6 +7134,332 @@
                 }
               ],
               "name": "createCallback"
+            },
+            {
+              "kind": "MethodSignature",
+              "canonicalReference": "@aws/durable-execution-sdk-js!DurableContext#distributedMap:member(1)",
+              "docComment": "/**\n * Starts a Lambda Distributed Map run over a source, processed by a Lambda function.\n *\n * @param name - Step name for tracking and debugging\n *\n * @param source - A DistributedMapSource, or a plain array as inline shorthand\n *\n * @param processor - The processor Lambda configuration\n *\n * @param maxConcurrency - Maximum concurrent processor invocations (positive integer)\n *\n * @param config - Optional configuration for results, completion, timeout, and destination\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "distributedMap<TItem, TOutput>(name: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string | undefined"
+                },
+                {
+                  "kind": "Content",
+                  "text": ", source: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "DistributedMapSource",
+                  "canonicalReference": "@aws/durable-execution-sdk-js!DistributedMapSource:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<TItem> | TItem[]"
+                },
+                {
+                  "kind": "Content",
+                  "text": ", processor: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "DistributedMapProcessor",
+                  "canonicalReference": "@aws/durable-execution-sdk-js!DistributedMapProcessor:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<TOutput>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ", maxConcurrency: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "number"
+                },
+                {
+                  "kind": "Content",
+                  "text": ", config?: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "DistributedMapConfig",
+                  "canonicalReference": "@aws/durable-execution-sdk-js!DistributedMapConfig:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<TOutput>"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "DurablePromise",
+                  "canonicalReference": "@aws/durable-execution-sdk-js!DurablePromise:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<"
+                },
+                {
+                  "kind": "Reference",
+                  "text": "DistributedMapSummary",
+                  "canonicalReference": "@aws/durable-execution-sdk-js!DistributedMapSummary:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": " | "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "DistributedMapResult",
+                  "canonicalReference": "@aws/durable-execution-sdk-js!DistributedMapResult:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<TOutput>>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "returnTypeTokenRange": {
+                "startIndex": 14,
+                "endIndex": 20
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "name",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  },
+                  "isOptional": false
+                },
+                {
+                  "parameterName": "source",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 3,
+                    "endIndex": 5
+                  },
+                  "isOptional": false
+                },
+                {
+                  "parameterName": "processor",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 6,
+                    "endIndex": 8
+                  },
+                  "isOptional": false
+                },
+                {
+                  "parameterName": "maxConcurrency",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 9,
+                    "endIndex": 10
+                  },
+                  "isOptional": false
+                },
+                {
+                  "parameterName": "config",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 11,
+                    "endIndex": 13
+                  },
+                  "isOptional": true
+                }
+              ],
+              "typeParameters": [
+                {
+                  "typeParameterName": "TItem",
+                  "constraintTokenRange": {
+                    "startIndex": 0,
+                    "endIndex": 0
+                  },
+                  "defaultTypeTokenRange": {
+                    "startIndex": 0,
+                    "endIndex": 0
+                  }
+                },
+                {
+                  "typeParameterName": "TOutput",
+                  "constraintTokenRange": {
+                    "startIndex": 0,
+                    "endIndex": 0
+                  },
+                  "defaultTypeTokenRange": {
+                    "startIndex": 0,
+                    "endIndex": 0
+                  }
+                }
+              ],
+              "name": "distributedMap"
+            },
+            {
+              "kind": "MethodSignature",
+              "canonicalReference": "@aws/durable-execution-sdk-js!DurableContext#distributedMap:member(2)",
+              "docComment": "/**\n * Starts a Lambda Distributed Map run over a source, processed by a Lambda function.\n *\n * @param source - A DistributedMapSource, or a plain array as inline shorthand\n *\n * @param processor - The processor Lambda configuration\n *\n * @param maxConcurrency - Maximum concurrent processor invocations (positive integer)\n *\n * @param config - Optional configuration for results, completion, timeout, and destination\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "distributedMap<TItem, TOutput>(source: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "DistributedMapSource",
+                  "canonicalReference": "@aws/durable-execution-sdk-js!DistributedMapSource:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<TItem> | TItem[]"
+                },
+                {
+                  "kind": "Content",
+                  "text": ", processor: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "DistributedMapProcessor",
+                  "canonicalReference": "@aws/durable-execution-sdk-js!DistributedMapProcessor:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<TOutput>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ", maxConcurrency: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "number"
+                },
+                {
+                  "kind": "Content",
+                  "text": ", config?: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "DistributedMapConfig",
+                  "canonicalReference": "@aws/durable-execution-sdk-js!DistributedMapConfig:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<TOutput>"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "DurablePromise",
+                  "canonicalReference": "@aws/durable-execution-sdk-js!DurablePromise:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<"
+                },
+                {
+                  "kind": "Reference",
+                  "text": "DistributedMapSummary",
+                  "canonicalReference": "@aws/durable-execution-sdk-js!DistributedMapSummary:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": " | "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "DistributedMapResult",
+                  "canonicalReference": "@aws/durable-execution-sdk-js!DistributedMapResult:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<TOutput>>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "returnTypeTokenRange": {
+                "startIndex": 12,
+                "endIndex": 18
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 2,
+              "parameters": [
+                {
+                  "parameterName": "source",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 3
+                  },
+                  "isOptional": false
+                },
+                {
+                  "parameterName": "processor",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 4,
+                    "endIndex": 6
+                  },
+                  "isOptional": false
+                },
+                {
+                  "parameterName": "maxConcurrency",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 7,
+                    "endIndex": 8
+                  },
+                  "isOptional": false
+                },
+                {
+                  "parameterName": "config",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 9,
+                    "endIndex": 11
+                  },
+                  "isOptional": true
+                }
+              ],
+              "typeParameters": [
+                {
+                  "typeParameterName": "TItem",
+                  "constraintTokenRange": {
+                    "startIndex": 0,
+                    "endIndex": 0
+                  },
+                  "defaultTypeTokenRange": {
+                    "startIndex": 0,
+                    "endIndex": 0
+                  }
+                },
+                {
+                  "typeParameterName": "TOutput",
+                  "constraintTokenRange": {
+                    "startIndex": 0,
+                    "endIndex": 0
+                  },
+                  "defaultTypeTokenRange": {
+                    "startIndex": 0,
+                    "endIndex": 0
+                  }
+                }
+              ],
+              "name": "distributedMap"
             },
             {
               "kind": "PropertySignature",
@@ -10680,6 +13239,23 @@
           "extendsTokenRanges": []
         },
         {
+          "kind": "Interface",
+          "canonicalReference": "@aws/durable-execution-sdk-js!FailureDestination:interface",
+          "docComment": "/**\n * Destination for failed items.\n *\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface FailureDestination "
+            }
+          ],
+          "fileUrlPath": "src/types/distributed-map.ts",
+          "releaseTag": "Public",
+          "name": "FailureDestination",
+          "preserveMemberOrder": false,
+          "members": [],
+          "extendsTokenRanges": []
+        },
+        {
           "kind": "Enum",
           "canonicalReference": "@aws/durable-execution-sdk-js!FieldMatchMode:enum",
           "docComment": "/**\n * Controls whether a preview field is matched by name anywhere in the object tree, or by exact dot-notation path from the root.\n *\n * @public\n */\n",
@@ -12613,6 +15189,38 @@
             },
             {
               "kind": "PropertySignature",
+              "canonicalReference": "@aws/durable-execution-sdk-js!Operation#DistributedMapDetails:member",
+              "docComment": "/**\n * Populated when `Type` is `DISTRIBUTED_MAP`.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "DistributedMapDetails?: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "DistributedMapDetails",
+                  "canonicalReference": "@aws/durable-execution-sdk-js!~DistributedMapDetails:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": " | undefined"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "DistributedMapDetails",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 3
+              }
+            },
+            {
+              "kind": "PropertySignature",
               "canonicalReference": "@aws/durable-execution-sdk-js!Operation#EndTimestamp:member",
               "docComment": "/**\n * When the operation reached a terminal status, if it has.\n */\n",
               "excerptTokens": [
@@ -13672,6 +16280,27 @@
             },
             {
               "kind": "EnumMember",
+              "canonicalReference": "@aws/durable-execution-sdk-js!OperationSubType.DISTRIBUTED_MAP:member",
+              "docComment": "/**\n * A distributed map operation (`context.distributedMap`).\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "DISTRIBUTED_MAP = "
+                },
+                {
+                  "kind": "Content",
+                  "text": "\"DistributedMap\""
+                }
+              ],
+              "initializerTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "releaseTag": "Public",
+              "name": "DISTRIBUTED_MAP"
+            },
+            {
+              "kind": "EnumMember",
               "canonicalReference": "@aws/durable-execution-sdk-js!OperationSubType.MAP:member",
               "docComment": "/**\n * A map operation (`context.map`).\n *\n * Represents parallel processing of an array of items with concurrency control and completion policies. Each map operation coordinates multiple iterations.\n */\n",
               "excerptTokens": [
@@ -13916,7 +16545,7 @@
             },
             {
               "kind": "Content",
-              "text": "{\n    readonly CALLBACK: \"CALLBACK\";\n    readonly CHAINED_INVOKE: \"CHAINED_INVOKE\";\n    readonly CONTEXT: \"CONTEXT\";\n    readonly EXECUTION: \"EXECUTION\";\n    readonly STEP: \"STEP\";\n    readonly WAIT: \"WAIT\";\n}"
+              "text": "{\n    readonly CALLBACK: \"CALLBACK\";\n    readonly CHAINED_INVOKE: \"CHAINED_INVOKE\";\n    readonly CONTEXT: \"CONTEXT\";\n    readonly DISTRIBUTED_MAP: \"DISTRIBUTED_MAP\";\n    readonly EXECUTION: \"EXECUTION\";\n    readonly STEP: \"STEP\";\n    readonly WAIT: \"WAIT\";\n}"
             }
           ],
           "fileUrlPath": "src/types/wire/wire-enums.ts",
@@ -14066,6 +16695,38 @@
               "isOptional": true,
               "releaseTag": "Public",
               "name": "ContextOptions",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 3
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@aws/durable-execution-sdk-js!OperationUpdate#DistributedMapOptions:member",
+              "docComment": "/**\n * Populated when `Type` is `DISTRIBUTED_MAP`.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "DistributedMapOptions?: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "DistributedMapOptions",
+                  "canonicalReference": "@aws/durable-execution-sdk-js!~DistributedMapOptions:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": " | undefined"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "DistributedMapOptions",
               "propertyTypeTokenRange": {
                 "startIndex": 1,
                 "endIndex": 3
@@ -14881,6 +17542,79 @@
           ]
         },
         {
+          "kind": "Interface",
+          "canonicalReference": "@aws/durable-execution-sdk-js!ProcessorRetryConfig:interface",
+          "docComment": "/**\n * Retry policy for the processor function.\n *\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface ProcessorRetryConfig "
+            }
+          ],
+          "fileUrlPath": "src/types/distributed-map.ts",
+          "releaseTag": "Public",
+          "name": "ProcessorRetryConfig",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@aws/durable-execution-sdk-js!ProcessorRetryConfig#maxRetryAttempts:member",
+              "docComment": "/**\n * Accepts non-negative attempts or \"unlimited\", 0 disables retries (default 2).\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "maxRetryAttempts?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "number | \"unlimited\""
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "maxRetryAttempts",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@aws/durable-execution-sdk-js!ProcessorRetryConfig#maxRetryDuration:member",
+              "docComment": "/**\n * Duration must be 1 minute to 6 hours (default 6 hours).\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "maxRetryDuration?: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Duration",
+                  "canonicalReference": "@aws/durable-execution-sdk-js!Duration:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "maxRetryDuration",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
           "kind": "Class",
           "canonicalReference": "@aws/durable-execution-sdk-js!PromiseCombinatorError:class",
           "docComment": "/**\n * Error thrown when a promise combinator operation fails\n *\n * @public\n */\n",
@@ -15010,6 +17744,102 @@
             "endIndex": 2
           },
           "implementsTokenRanges": []
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "@aws/durable-execution-sdk-js!ReaderPage:interface",
+          "docComment": "/**\n * A page returned by a reader function, its items and the next state.\n *\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface ReaderPage<TItem, TState> "
+            }
+          ],
+          "fileUrlPath": "src/distributed-map-helpers.ts",
+          "releaseTag": "Public",
+          "typeParameters": [
+            {
+              "typeParameterName": "TItem",
+              "constraintTokenRange": {
+                "startIndex": 0,
+                "endIndex": 0
+              },
+              "defaultTypeTokenRange": {
+                "startIndex": 0,
+                "endIndex": 0
+              }
+            },
+            {
+              "typeParameterName": "TState",
+              "constraintTokenRange": {
+                "startIndex": 0,
+                "endIndex": 0
+              },
+              "defaultTypeTokenRange": {
+                "startIndex": 0,
+                "endIndex": 0
+              }
+            }
+          ],
+          "name": "ReaderPage",
+          "preserveMemberOrder": false,
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@aws/durable-execution-sdk-js!ReaderPage#items:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "items: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "TItem[]"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": false,
+              "releaseTag": "Public",
+              "name": "items",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@aws/durable-execution-sdk-js!ReaderPage#nextState:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "nextState?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "TState"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isReadonly": false,
+              "isOptional": true,
+              "releaseTag": "Public",
+              "name": "nextState",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "extendsTokenRanges": []
         },
         {
           "kind": "Function",
@@ -16405,6 +19235,23 @@
               "name": "AtMostOncePerRetry"
             }
           ]
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "@aws/durable-execution-sdk-js!SuccessDestination:interface",
+          "docComment": "/**\n * Destination for succeeded items.\n *\n * @public\n */\n",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "export interface SuccessDestination "
+            }
+          ],
+          "fileUrlPath": "src/types/distributed-map.ts",
+          "releaseTag": "Public",
+          "name": "SuccessDestination",
+          "preserveMemberOrder": false,
+          "members": [],
+          "extendsTokenRanges": []
         },
         {
           "kind": "Interface",

@@ -71,6 +71,18 @@ export abstract class DurableOperationError extends Error {
           cause,
           errorObject.ErrorData,
         );
+      case "DistributedMapError":
+        return new DistributedMapError(
+          errorObject.ErrorMessage || "Distributed map run failed",
+          cause,
+          errorObject.ErrorData,
+        );
+      case "DistributedMapItemError":
+        return new DistributedMapItemError(
+          errorObject.ErrorMessage || "Distributed map item failed",
+          cause,
+          errorObject.ErrorData,
+        );
       case "ChildContextError":
         return new ChildContextError(
           errorObject.ErrorMessage || "Child context failed",
@@ -214,6 +226,30 @@ export class InvokeError extends DurableOperationError {
 
   constructor(message?: string, cause?: Error, errorData?: string) {
     super(message || "Invoke failed", cause, errorData);
+  }
+}
+
+/**
+ * Error thrown when a distributed map run does not fully succeed
+ * @public
+ */
+export class DistributedMapError extends DurableOperationError {
+  readonly errorType: string = "DistributedMapError";
+
+  constructor(message?: string, cause?: Error, errorData?: string) {
+    super(message || "Distributed map run failed", cause, errorData);
+  }
+}
+
+/**
+ * Error recorded for a single failed item in a distributed map run
+ * @public
+ */
+export class DistributedMapItemError extends DistributedMapError {
+  readonly errorType = "DistributedMapItemError";
+
+  constructor(message?: string, cause?: Error, errorData?: string) {
+    super(message || "Distributed map item failed", cause, errorData);
   }
 }
 
