@@ -1,99 +1,359 @@
 import {
-  assertSourceConfig,
-  assertProcessorConfig,
-  assertDestinationConfig,
   assertCompletionConfig,
+  assertDestination,
+  assertProcessor,
+  assertSource,
   DistributedMapCompletionConfig,
+  DistributedMapDestination,
+  DistributedMapDestinationConfig,
+  DistributedMapProcessor,
+  DistributedMapSource,
   DistributedMapS3SourceConfig,
+  FailureDestination,
+  SuccessDestination,
 } from "./distributed-map";
 
-const s3Source = (s3: Partial<DistributedMapS3SourceConfig>): unknown => ({
-  s3: { bucket: "my-bucket", ...s3 },
+const s3Wire = (source: DistributedMapSource<unknown>): unknown =>
+  source.definition.type === "S3" ? source.definition.s3 : undefined;
+
+describe("Distributed map S3 source factories", () => {
+  it("maps each object factory to an OBJECT source with a key and a format", () => {
+    expect(s3Wire(DistributedMapSource.s3.jsonLines("s3://b/k.jsonl"))).toEqual(
+      {
+        Type: "OBJECT",
+        Bucket: "b",
+        ObjectConfig: { Key: "k.jsonl", Format: "JSON_LINES" },
+      },
+    );
+    expect(s3Wire(DistributedMapSource.s3.jsonArray("s3://b/k.json"))).toEqual({
+      Type: "OBJECT",
+      Bucket: "b",
+      ObjectConfig: { Key: "k.json", Format: "JSON_ARRAY" },
+    });
+    expect(s3Wire(DistributedMapSource.s3.csv("s3://b/k.csv"))).toEqual({
+      Type: "OBJECT",
+      Bucket: "b",
+      ObjectConfig: {
+        Key: "k.csv",
+        Format: "CSV",
+        CsvFormatOptions: { HeaderLocation: "FIRST_ROW", Delimiter: "COMMA" },
+      },
+    });
+  });
+
+  it("maps objects to a LISTED_OBJECT_METADATA source", () => {
+    expect(s3Wire(DistributedMapSource.s3.objects("s3://b/p/"))).toEqual({
+      Type: "LISTED_OBJECT_METADATA",
+      Bucket: "b",
+      ListedObjectMetadataConfig: { KeyPrefix: "p/" },
+    });
+  });
+
+  it("maps each flattened factory to a LISTED_OBJECTS source with a format", () => {
+    expect(
+      s3Wire(DistributedMapSource.s3.flattenedJsonLines("s3://b/p/")),
+    ).toEqual({
+      Type: "LISTED_OBJECTS",
+      Bucket: "b",
+      ListedObjectsConfig: { KeyPrefix: "p/", Format: "JSON_LINES" },
+    });
+    expect(
+      s3Wire(DistributedMapSource.s3.flattenedJsonArray("s3://b/p/")),
+    ).toEqual({
+      Type: "LISTED_OBJECTS",
+      Bucket: "b",
+      ListedObjectsConfig: { KeyPrefix: "p/", Format: "JSON_ARRAY" },
+    });
+    expect(
+      s3Wire(
+        DistributedMapSource.s3.flattenedCsv("s3://b/p/", { delimiter: "TAB" }),
+      ),
+    ).toEqual({
+      Type: "LISTED_OBJECTS",
+      Bucket: "b",
+      ListedObjectsConfig: {
+        KeyPrefix: "p/",
+        Format: "CSV",
+        CsvFormatOptions: { HeaderLocation: "FIRST_ROW", Delimiter: "TAB" },
+      },
+    });
+  });
+
+  it("accepts an empty prefix, which lists the whole bucket", () => {
+    expect(s3Wire(DistributedMapSource.s3.objects("s3://b"))).toEqual({
+      Type: "LISTED_OBJECT_METADATA",
+      Bucket: "b",
+      ListedObjectMetadataConfig: { KeyPrefix: "" },
+    });
+    expect(
+      s3Wire(DistributedMapSource.s3.flattenedJsonLines("s3://b")),
+    ).toEqual({
+      Type: "LISTED_OBJECTS",
+      Bucket: "b",
+      ListedObjectsConfig: { KeyPrefix: "", Format: "JSON_LINES" },
+    });
+  });
+
+  it("rejects an object source with no key", () => {
+    expect(() => DistributedMapSource.s3.jsonLines("s3://b")).toThrow(
+      /requires a key/,
+    );
+    expect(() => DistributedMapSource.s3.csv("s3://b/")).toThrow(
+      /requires a key/,
+    );
+  });
+
+  it("rejects a URI with the wrong scheme or no bucket", () => {
+    expect(() => DistributedMapSource.s3.jsonLines("https://b/k")).toThrow(
+      /must start with s3:\/\//,
+    );
+    expect(() => DistributedMapSource.s3.objects("s3:///p/")).toThrow(
+      /missing bucket/,
+    );
+  });
+
+  it("sends the expected bucket owner and max items", () => {
+    const source = DistributedMapSource.s3.jsonLines("s3://b/k", {
+      expectedBucketOwner: "123456789012",
+      maxItems: 5,
+    });
+    expect(source.definition).toEqual({
+      type: "S3",
+      maxItems: 5,
+      s3: {
+        Type: "OBJECT",
+        Bucket: "b",
+        ExpectedBucketOwner: "123456789012",
+        ObjectConfig: { Key: "k", Format: "JSON_LINES" },
+      },
+    });
+  });
+
+  it("rejects an expectedBucketOwner that is not exactly 12 digits", () => {
+    const opts: DistributedMapS3SourceConfig = { expectedBucketOwner: "12345" };
+    expect(() => DistributedMapSource.s3.jsonLines("s3://b/k", opts)).toThrow(
+      /12 digits/,
+    );
+    expect(() =>
+      DistributedMapSource.s3.objects("s3://b/p/", {
+        expectedBucketOwner: "12345678901a",
+      }),
+    ).toThrow(/12 digits/);
+  });
+});
+
+describe("Distributed map CSV source columns", () => {
+  it("maps headers to a GIVEN header location", () => {
+    expect(
+      s3Wire(
+        DistributedMapSource.s3.csv("s3://b/k", {
+          headers: ["a"],
+          delimiter: "TAB",
+        }),
+      ),
+    ).toMatchObject({
+      ObjectConfig: {
+        CsvFormatOptions: {
+          HeaderLocation: "GIVEN",
+          Headers: ["a"],
+          Delimiter: "TAB",
+        },
+      },
+    });
+  });
+
+  it("sends a FIRST_ROW header location and no names for expectedColumns", () => {
+    expect(
+      s3Wire(
+        DistributedMapSource.s3.csv("s3://b/k", { expectedColumns: ["a"] }),
+      ),
+    ).toMatchObject({
+      ObjectConfig: {
+        CsvFormatOptions: { HeaderLocation: "FIRST_ROW", Delimiter: "COMMA" },
+      },
+    });
+  });
+
+  it("accepts as const column arrays", () => {
+    const columns = ["id", "name"] as const;
+    expect(() =>
+      DistributedMapSource.s3.csv("s3://b/k", { expectedColumns: columns }),
+    ).not.toThrow();
+    expect(() =>
+      DistributedMapSource.s3.flattenedCsv("s3://b/p/", { headers: columns }),
+    ).not.toThrow();
+  });
+
+  it("rejects empty or duplicate columns", () => {
+    expect(() =>
+      DistributedMapSource.s3.csv("s3://b/k", { headers: [] }),
+    ).toThrow(/non-empty/);
+    expect(() =>
+      DistributedMapSource.s3.csv("s3://b/k", { headers: ["a", "a"] }),
+    ).toThrow(/duplicates/);
+  });
+
+  it("rejects more than 1,000 columns or a column name over 256 characters", () => {
+    const columns = Array.from({ length: 1001 }, (_, i) => `c${i}`);
+    expect(() =>
+      DistributedMapSource.s3.csv("s3://b/k", { expectedColumns: columns }),
+    ).toThrow(/at most 1000 names/);
+    expect(() =>
+      DistributedMapSource.s3.csv("s3://b/k", {
+        headers: columns.slice(0, 1000),
+      }),
+    ).not.toThrow();
+    expect(() =>
+      DistributedMapSource.s3.flattenedCsv("s3://b/p/", {
+        headers: ["a".repeat(257)],
+      }),
+    ).toThrow(/at most 256 characters/);
+    expect(() =>
+      DistributedMapSource.s3.csv("s3://b/k", { headers: ["a".repeat(256)] }),
+    ).not.toThrow();
+  });
+});
+
+describe("Distributed map inline and reader source factories", () => {
+  it("keeps inline items unserialized with their serdes and max items", () => {
+    const serdes = {
+      serialize: async (v?: number): Promise<string> => String(v),
+      deserialize: async (d?: string): Promise<number> => Number(d),
+    };
+    expect(
+      DistributedMapSource.inline([1, 2], { serdes, maxItems: 1 }).definition,
+    ).toEqual({ type: "INLINE", items: [1, 2], serdes, maxItems: 1 });
+  });
+
+  it("rejects inline items that are not an array", () => {
+    expect(() => DistributedMapSource.inline("x" as never)).toThrow(
+      /must be an array/,
+    );
+  });
+
+  it("builds a reader source", () => {
+    expect(
+      DistributedMapSource.reader.fromFunction("reader-fn", {
+        initialState: { page: 0 },
+      }).definition,
+    ).toMatchObject({
+      type: "READER_FUNCTION",
+      functionName: "reader-fn",
+      initialState: { page: 0 },
+    });
+  });
+
+  it("rejects a maxItems that is not an integer from 1 through 100,000,000", () => {
+    const range = /integer from 1 through 100000000/;
+    expect(() => DistributedMapSource.inline([], { maxItems: 0 })).toThrow(
+      range,
+    );
+    expect(() =>
+      DistributedMapSource.reader.fromFunction("fn", { maxItems: 1.5 }),
+    ).toThrow(range);
+    expect(() =>
+      DistributedMapSource.s3.jsonLines("s3://b/k", {
+        maxItems: 100_000_001,
+      }),
+    ).toThrow(range);
+    expect(() =>
+      DistributedMapSource.inline([], { maxItems: 100_000_000 }),
+    ).not.toThrow();
+  });
 });
 
 describe("Distributed map function-name validation", () => {
   it("accepts a bare name, a qualified name, and a full ARN within the limit", () => {
-    expect(() =>
-      assertProcessorConfig({ functionName: "my-fn" }),
-    ).not.toThrow();
-    expect(() =>
-      assertProcessorConfig({ functionName: "my-fn:PROD" }),
-    ).not.toThrow();
-    expect(() =>
-      assertProcessorConfig({
-        functionName: "arn:aws:lambda:us-east-1:123456789012:function:my-fn",
-      }),
-    ).not.toThrow();
-    expect(() =>
-      assertProcessorConfig({ functionName: "a".repeat(170) }),
-    ).not.toThrow();
+    for (const name of [
+      "my-fn",
+      "my-fn:PROD",
+      "arn:aws:lambda:us-east-1:123456789012:function:my-fn",
+      "a".repeat(170),
+    ]) {
+      expect(() =>
+        DistributedMapProcessor.reportBatchOutcome(name),
+      ).not.toThrow();
+    }
   });
 
   it("rejects an empty name", () => {
-    expect(() => assertProcessorConfig({ functionName: "" })).toThrow(
+    expect(() => DistributedMapProcessor.reportItemOutcomes("")).toThrow(
       /non-empty/,
     );
-    expect(() => assertSourceConfig({ reader: { functionName: "" } })).toThrow(
+    expect(() => DistributedMapSource.reader.fromFunction("")).toThrow(
       /non-empty/,
     );
   });
 
   it("rejects a name longer than 170 characters", () => {
     expect(() =>
-      assertProcessorConfig({ functionName: "a".repeat(171) }),
+      DistributedMapProcessor.reportBatchOutcome("a".repeat(171)),
     ).toThrow(/170/);
     expect(() =>
-      assertSourceConfig({ reader: { functionName: "a".repeat(171) } }),
+      DistributedMapSource.reader.fromFunction("a".repeat(171)),
     ).toThrow(/170/);
   });
 });
 
-describe("Distributed map durableExecutionNamePrefix validation", () => {
-  it("accepts a prefix of 1 to 36 characters", () => {
-    expect(() =>
-      assertProcessorConfig({
-        functionName: "fn",
+describe("Distributed map processor factories", () => {
+  it("sends no response type for reportBatchOutcome", () => {
+    expect(DistributedMapProcessor.reportBatchOutcome("fn").options).toEqual({
+      FunctionName: "fn",
+    });
+  });
+
+  it("sends REPORT_BATCH_ITEM_OUTCOMES for reportItemOutcomes", () => {
+    expect(
+      DistributedMapProcessor.reportItemOutcomes("fn").options
+        .FunctionResponseTypes,
+    ).toEqual(["REPORT_BATCH_ITEM_OUTCOMES"]);
+  });
+
+  it("maps the processor options to the wire", () => {
+    expect(
+      DistributedMapProcessor.reportItemOutcomes("fn", {
+        batchSize: 10,
+        maxRetryAttempts: "unlimited",
+        maxRetryDuration: { minutes: 5 },
         durableExecutionNamePrefix: "p",
-      }),
-    ).not.toThrow();
-    expect(() =>
-      assertProcessorConfig({
-        functionName: "fn",
-        durableExecutionNamePrefix: "a".repeat(36),
-      }),
-    ).not.toThrow();
+      }).options,
+    ).toEqual({
+      FunctionName: "fn",
+      FunctionResponseTypes: ["REPORT_BATCH_ITEM_OUTCOMES"],
+      BatchSize: 10,
+      MaxRetryAttempts: -1,
+      MaxRetryDurationSeconds: 300,
+      DurableExecutionNamePrefix: "p",
+    });
   });
 
-  it("rejects an empty or over-long prefix", () => {
-    expect(() =>
-      assertProcessorConfig({
-        functionName: "fn",
-        durableExecutionNamePrefix: "",
-      }),
-    ).toThrow(/between 1 and 36/);
-    expect(() =>
-      assertProcessorConfig({
-        functionName: "fn",
-        durableExecutionNamePrefix: "a".repeat(37),
-      }),
-    ).toThrow(/between 1 and 36/);
+  it("sends a retry duration without a retry attempt count", () => {
+    const options = DistributedMapProcessor.reportBatchOutcome("fn", {
+      maxRetryDuration: { minutes: 5 },
+    }).options;
+    expect(options.MaxRetryDurationSeconds).toBe(300);
+    expect(options.MaxRetryAttempts).toBeUndefined();
   });
-});
 
-describe("Distributed map processor option validation", () => {
+  it("accepts a zero retry attempt count", () => {
+    expect(
+      DistributedMapProcessor.reportBatchOutcome("fn", { maxRetryAttempts: 0 })
+        .options.MaxRetryAttempts,
+    ).toBe(0);
+  });
+
   it("rejects a batchSize outside 1 to 10000", () => {
     expect(() =>
-      assertProcessorConfig({ functionName: "fn", batchSize: 0 }),
+      DistributedMapProcessor.reportBatchOutcome("fn", { batchSize: 0 }),
     ).toThrow(/between 1 and 10000/);
     expect(() =>
-      assertProcessorConfig({ functionName: "fn", batchSize: 10001 }),
+      DistributedMapProcessor.reportBatchOutcome("fn", { batchSize: 10001 }),
     ).toThrow(/between 1 and 10000/);
   });
 
   it("rejects a retry duration outside 1 minute to 6 hours", () => {
     expect(() =>
-      assertProcessorConfig({
-        functionName: "fn",
+      DistributedMapProcessor.reportBatchOutcome("fn", {
         maxRetryDuration: { seconds: 30 },
       }),
     ).toThrow(/1 minute and 6 hours/);
@@ -101,228 +361,171 @@ describe("Distributed map processor option validation", () => {
 
   it("rejects a negative retry attempt count", () => {
     expect(() =>
-      assertProcessorConfig({ functionName: "fn", maxRetryAttempts: -1 }),
+      DistributedMapProcessor.reportBatchOutcome("fn", {
+        maxRetryAttempts: -1,
+      }),
     ).toThrow(/non-negative integer/);
   });
 
-  it('accepts "unlimited" and a non-negative integer attempt count', () => {
+  it("rejects an empty or over-long durableExecutionNamePrefix", () => {
     expect(() =>
-      assertProcessorConfig({
-        functionName: "fn",
-        maxRetryAttempts: "unlimited",
+      DistributedMapProcessor.reportBatchOutcome("fn", {
+        durableExecutionNamePrefix: "",
       }),
-    ).not.toThrow();
+    ).toThrow(/between 1 and 36/);
     expect(() =>
-      assertProcessorConfig({ functionName: "fn", maxRetryAttempts: 0 }),
-    ).not.toThrow();
-  });
-
-  it("rejects an unknown responseMode", () => {
-    expect(() =>
-      assertProcessorConfig({ functionName: "fn", responseMode: "everything" }),
-    ).toThrow(/Invalid responseMode/);
-  });
-
-  it("rejects a processor that is not an object", () => {
-    expect(() => assertProcessorConfig("fn")).toThrow(/Invalid processor/);
+      DistributedMapProcessor.reportBatchOutcome("fn", {
+        durableExecutionNamePrefix: "a".repeat(37),
+      }),
+    ).toThrow(/between 1 and 36/);
   });
 });
 
-describe("Distributed map source shape validation", () => {
-  it("accepts an array of items", () => {
-    expect(() => assertSourceConfig([1, 2])).not.toThrow();
+describe("Distributed map destination factories", () => {
+  it("applies the include defaults", () => {
+    expect(
+      DistributedMapDestination.s3.successes("s3://b/out/").options,
+    ).toEqual({
+      Type: "S3",
+      Include: ["OUTPUT"],
+      S3DestinationConfig: { Bucket: "b", KeyPrefix: "out/" },
+    });
+    expect(
+      DistributedMapDestination.s3.failures("s3://b/err/").options.Include,
+    ).toEqual(["INPUT", "ERROR"]);
   });
 
-  it("accepts each source kind", () => {
-    expect(() => assertSourceConfig({ inline: { items: [1] } })).not.toThrow();
-    expect(() =>
-      assertSourceConfig(s3Source({ key: "k", format: "JSON_LINES" })),
-    ).not.toThrow();
-    expect(() =>
-      assertSourceConfig({ reader: { functionName: "reader-fn" } }),
-    ).not.toThrow();
-  });
-
-  it("rejects a source with no kind or more than one kind", () => {
-    expect(() => assertSourceConfig({})).toThrow(
-      /exactly one of inline, s3 or reader/,
-    );
-    expect(() =>
-      assertSourceConfig({
-        inline: { items: [] },
-        reader: { functionName: "fn" },
-      }),
-    ).toThrow(/exactly one of inline, s3 or reader/);
-  });
-
-  it("rejects a non-object source", () => {
-    expect(() => assertSourceConfig(42)).toThrow(/Invalid source/);
-  });
-
-  it("rejects inline items that are not an array", () => {
-    expect(() => assertSourceConfig({ inline: { items: "x" } })).toThrow(
-      /must be an array/,
-    );
-  });
-
-  it("rejects a non-positive or non-integer maxItems", () => {
-    expect(() =>
-      assertSourceConfig({ inline: { items: [] }, maxItems: 0 }),
-    ).toThrow(/positive integer/);
-    expect(() =>
-      assertSourceConfig({ inline: { items: [] }, maxItems: 1.5 }),
-    ).toThrow(/positive integer/);
-  });
-});
-
-describe("Distributed map S3 source validation", () => {
-  it("rejects an empty bucket", () => {
-    expect(() =>
-      assertSourceConfig(s3Source({ bucket: "", key: "k", format: "CSV" })),
-    ).toThrow(/bucket/);
-  });
-
-  it("rejects both or neither of key and prefix", () => {
-    expect(() =>
-      assertSourceConfig(
-        s3Source({ key: "k", prefix: "p/", format: "JSON_LINES" }),
-      ),
-    ).toThrow(/exactly one of key or prefix/);
-    expect(() =>
-      assertSourceConfig(s3Source({ format: "JSON_LINES" })),
-    ).toThrow(/exactly one of key or prefix/);
-  });
-
-  it("rejects an empty key, and a key with no format", () => {
-    expect(() =>
-      assertSourceConfig(s3Source({ key: "", format: "JSON_LINES" })),
-    ).toThrow(/key must be non-empty/);
-    expect(() => assertSourceConfig(s3Source({ key: "k" }))).toThrow(
-      /requires a format/,
-    );
-  });
-
-  it("accepts a prefix with no format", () => {
-    expect(() => assertSourceConfig(s3Source({ prefix: "p/" }))).not.toThrow();
-  });
-
-  it("rejects csv options when the format is not CSV", () => {
-    expect(() =>
-      assertSourceConfig(
-        s3Source({ key: "k", format: "JSON_LINES", csv: { headers: ["a"] } }),
-      ),
-    ).toThrow(/only valid when format is CSV/);
-  });
-
-  it("rejects headers and expectedColumns set together", () => {
-    expect(() =>
-      assertSourceConfig(
-        s3Source({
-          key: "k",
-          format: "CSV",
-          csv: { headers: ["a"], expectedColumns: ["a"] },
-        }),
-      ),
-    ).toThrow(/mutually exclusive/);
-  });
-
-  it("accepts as const column arrays", () => {
-    const columns = ["id", "name"] as const;
-    const s3: DistributedMapS3SourceConfig = {
-      bucket: "my-bucket",
-      key: "k",
-      format: "CSV",
-      csv: { expectedColumns: columns },
-    };
-    expect(() => assertSourceConfig({ s3 })).not.toThrow();
-    expect(() =>
-      assertSourceConfig(
-        s3Source({ key: "k", format: "CSV", csv: { headers: columns } }),
-      ),
-    ).not.toThrow();
-  });
-
-  it("rejects empty or duplicate CSV columns", () => {
-    expect(() =>
-      assertSourceConfig(
-        s3Source({ key: "k", format: "CSV", csv: { headers: [] } }),
-      ),
-    ).toThrow(/non-empty/);
-    expect(() =>
-      assertSourceConfig(
-        s3Source({ key: "k", format: "CSV", csv: { headers: ["a", "a"] } }),
-      ),
-    ).toThrow(/duplicates/);
-  });
-
-  it("rejects an expectedBucketOwner that is not exactly 12 digits", () => {
-    expect(() =>
-      assertSourceConfig(
-        s3Source({
-          key: "k",
-          format: "JSON_LINES",
-          expectedBucketOwner: "12345",
-        }),
-      ),
-    ).toThrow(/12 digits/);
-    expect(() =>
-      assertSourceConfig(
-        s3Source({
-          key: "k",
-          format: "JSON_LINES",
-          expectedBucketOwner: "12345678901a",
-        }),
-      ),
-    ).toThrow(/12 digits/);
-  });
-});
-
-describe("Distributed map destination validation", () => {
-  it("accepts an absent destination and the default include settings", () => {
-    expect(() => assertDestinationConfig(undefined)).not.toThrow();
-    expect(() =>
-      assertDestinationConfig({
-        onSuccess: { bucket: "b", prefix: "out/" },
-        onFailure: { bucket: "b", prefix: "err/" },
-      }),
-    ).not.toThrow();
+  it("sends the expected bucket owner", () => {
+    expect(
+      DistributedMapDestination.s3.failures("s3://b/err/", {
+        expectedBucketOwner: "123456789012",
+      }).options.S3DestinationConfig.ExpectedBucketOwner,
+    ).toBe("123456789012");
   });
 
   it("rejects a success destination that includes neither input nor output", () => {
     expect(() =>
-      assertDestinationConfig({
-        onSuccess: {
-          bucket: "b",
-          prefix: "out/",
-          includeInput: false,
-          includeOutput: false,
-        },
+      DistributedMapDestination.s3.successes("s3://b/out/", {
+        includeOutput: false,
       }),
     ).toThrow(/at least one of input or output/);
   });
 
   it("rejects a failure destination that includes neither input nor error", () => {
     expect(() =>
-      assertDestinationConfig({
-        onFailure: {
-          bucket: "b",
-          prefix: "err/",
-          includeInput: false,
-          includeError: false,
-        },
+      DistributedMapDestination.s3.failures("s3://b/err/", {
+        includeInput: false,
+        includeError: false,
       }),
     ).toThrow(/at least one of input or error/);
   });
 
-  it("rejects an empty bucket and a bad expectedBucketOwner", () => {
+  it("rejects a bad URI and a bad expectedBucketOwner", () => {
+    expect(() => DistributedMapDestination.s3.successes("b/out/")).toThrow(
+      /s3:\/\//,
+    );
     expect(() =>
-      assertDestinationConfig({ onSuccess: { bucket: "", prefix: "out/" } }),
-    ).toThrow(/bucket/);
-    expect(() =>
-      assertDestinationConfig({
-        onFailure: { bucket: "b", prefix: "err/", expectedBucketOwner: "1" },
+      DistributedMapDestination.s3.failures("s3://b/err/", {
+        expectedBucketOwner: "1",
       }),
     ).toThrow(/12 digits/);
+  });
+
+  it("accepts a 900-character key prefix and rejects 901", () => {
+    expect(() =>
+      DistributedMapDestination.s3.successes(`s3://b/${"p".repeat(900)}`),
+    ).not.toThrow();
+    expect(() =>
+      DistributedMapDestination.s3.failures(`s3://b/${"p".repeat(901)}`),
+    ).toThrow(/at most 900 characters/);
+  });
+});
+
+describe("Distributed map compile-time checks", () => {
+  it("does not type-check a destination assigned to the wrong outcome", () => {
+    const config: DistributedMapDestinationConfig = {
+      // @ts-expect-error A FailureDestination cannot be assigned to onSuccess.
+      onSuccess: DistributedMapDestination.s3.failures("s3://b/err/"),
+      // @ts-expect-error A SuccessDestination cannot be assigned to onFailure.
+      onFailure: DistributedMapDestination.s3.successes("s3://b/out/"),
+    };
+    expect(config).toBeDefined();
+  });
+
+  it("does not type-check headers and expectedColumns together", () => {
+    expect(() =>
+      DistributedMapSource.s3.csv("s3://b/k", {
+        headers: ["a"],
+        // @ts-expect-error headers and expectedColumns are mutually exclusive.
+        expectedColumns: ["a"],
+      }),
+    ).toThrow(/mutually exclusive/);
+  });
+
+  it("carries the declared output type on the processor", () => {
+    const processor = DistributedMapProcessor.reportItemOutcomes<number>("fn");
+    // @ts-expect-error The processor's output type is number, not string.
+    const wrong: DistributedMapProcessor<string> = processor;
+    const batch: DistributedMapProcessor<never> =
+      DistributedMapProcessor.reportBatchOutcome("fn");
+    expect([wrong, batch]).toHaveLength(2);
+  });
+});
+
+describe("Distributed map call-site shape checks", () => {
+  it("accepts an array and every source factory's result", () => {
+    expect(() => assertSource([1, 2])).not.toThrow();
+    expect(() => assertSource(DistributedMapSource.inline([1]))).not.toThrow();
+    expect(() =>
+      assertSource(DistributedMapSource.s3.jsonLines("s3://b/k")),
+    ).not.toThrow();
+    expect(() =>
+      assertSource(DistributedMapSource.reader.fromFunction("fn")),
+    ).not.toThrow();
+  });
+
+  it("rejects a source not built by a factory", () => {
+    expect(() => assertSource({ inline: { items: [] } })).toThrow(
+      /Invalid source/,
+    );
+    expect(() => assertSource(42)).toThrow(/Invalid source/);
+    expect(() => assertSource(undefined)).toThrow(/Invalid source/);
+  });
+
+  it("rejects a processor not built by a factory", () => {
+    expect(() =>
+      assertProcessor(DistributedMapProcessor.reportBatchOutcome("fn")),
+    ).not.toThrow();
+    expect(() => assertProcessor({ functionName: "fn" })).toThrow(
+      /Invalid processor/,
+    );
+    expect(() => assertProcessor("fn")).toThrow(/Invalid processor/);
+  });
+
+  it("rejects a destination built by the other factory", () => {
+    expect(() => assertDestination(undefined)).not.toThrow();
+    expect(() =>
+      assertDestination({
+        onSuccess: DistributedMapDestination.s3.successes("s3://b/out/"),
+        onFailure: DistributedMapDestination.s3.failures("s3://b/err/"),
+      }),
+    ).not.toThrow();
+    expect(() =>
+      assertDestination({
+        onSuccess: DistributedMapDestination.s3.failures(
+          "s3://b/err/",
+        ) as unknown as SuccessDestination,
+      }),
+    ).toThrow(
+      /onSuccess must be built with DistributedMapDestination.s3.successes/,
+    );
+    expect(() =>
+      assertDestination({
+        onFailure: { bucket: "b" } as unknown as FailureDestination,
+      }),
+    ).toThrow(
+      /onFailure must be built with DistributedMapDestination.s3.failures/,
+    );
   });
 });
 
@@ -355,6 +558,18 @@ describe("Distributed map completion config validation", () => {
         minimumSampleSize: 50,
       } as unknown as DistributedMapCompletionConfig),
     ).toThrow(/minimumSampleSize/);
+  });
+
+  it("rejects a config with neither threshold", () => {
+    expect(() =>
+      assertCompletionConfig({} as unknown as DistributedMapCompletionConfig),
+    ).toThrow(/must set toleratedFailureCount or toleratedFailurePercentage/);
+  });
+
+  it("rejects a non-integer percentage", () => {
+    expect(() =>
+      assertCompletionConfig({ toleratedFailurePercentage: 12.5 }),
+    ).toThrow(/Must be an integer from 0 through 100/);
   });
 
   it("rejects a negative count", () => {

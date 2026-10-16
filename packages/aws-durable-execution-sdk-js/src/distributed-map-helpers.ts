@@ -7,6 +7,7 @@ import {
 } from "./utils/serdes/serdes";
 import { DurableContext, DurableLambdaHandler, BatchItemStatus } from "./types";
 import { withDurableExecution } from "./with-durable-execution";
+import { STORE_STACK_TRACES } from "./utils/constants/constants";
 
 const READER_STATE_LIMIT = 32 * 1024;
 
@@ -37,13 +38,17 @@ interface ReaderEvent {
 export interface ErrorDetail {
   errorType: string;
   errorMessage: string;
+  /** Serialized custom error data, when the error carried it. */
+  errorData?: string;
+  /** Stack trace lines, when the SDK is configured to store stack traces. */
+  stackTrace?: string[];
 }
 
-/** Output of one succeeded item in an item handler response. @public */
+/** One succeeded item in an item handler response. @public */
 export interface ItemResult {
   itemIdentifier: string;
-  /** The output as a serialized string, or null when the result serdes produced none. */
-  output: string | null;
+  /** The output as a serialized string. Absent when the handler returned undefined. */
+  output?: string;
 }
 
 /** One failed item in an item handler response. @public */
@@ -54,8 +59,7 @@ export interface ItemFailure {
 
 /** Response an item handler returns to the distributed map run. @public */
 export interface ItemHandlerResponse {
-  /** Present only when the handler reports results. */
-  batchItemResults?: ItemResult[];
+  batchItemResults: ItemResult[];
   batchItemFailures: ItemFailure[];
 }
 
@@ -65,19 +69,6 @@ export interface ReaderResponse {
   items: string[];
   /** The next state as a serialized string, absent when the source is exhausted. */
   nextState?: string;
-}
-
-type ItemReport = "results" | "failures";
-
-const VALID_REPORTS: readonly string[] = ["results", "failures"];
-
-/** The wrapper cannot see the processor config, so this must match the mode the run started with. */
-function assertReport(report: ItemReport | undefined): void {
-  if (report !== undefined && !VALID_REPORTS.includes(report)) {
-    throw new Error(
-      'report must be "results" or "failures", matching the processor reference mode',
-    );
-  }
 }
 
 /** Reject a concurrency the pool would otherwise silently coerce (0 to unbounded, negatives to 1). */
@@ -125,23 +116,37 @@ async function toItem<T>(
   return (await serdes.deserialize(body, ctx)) as T;
 }
 
+/**
+ * Serializes a handler's return value. Returns undefined when the handler returned undefined or
+ * the serdes produced no string. The caller then leaves the item out of batchItemResults, and
+ * the service records the item as succeeded with no output.
+ */
 async function toOutput<T>(
   serdes: Serdes<T>,
   value: T,
   ctx: SerdesContext,
-): Promise<string | null> {
-  return (await serdes.serialize(value, ctx)) ?? null;
+): Promise<string | undefined> {
+  if (value === undefined) return undefined;
+  return await serdes.serialize(value, ctx);
 }
 
 function errorEntry(itemId: string, err: unknown): ItemFailure {
-  const e = err as { name?: string; message?: string };
-  return {
-    itemIdentifier: itemId,
-    error: {
-      errorType: e?.name ?? "Error",
-      errorMessage: e?.message ?? String(err),
-    },
+  const e = err as {
+    name?: string;
+    message?: string;
+    stack?: string;
+    errorData?: unknown;
   };
+  const error: ErrorDetail = {
+    errorType: e?.name ?? "Error",
+    errorMessage: e?.message ?? String(err),
+  };
+  if (typeof e?.errorData === "string") error.errorData = e.errorData;
+  // The SDK stores stack traces only when STORE_STACK_TRACES is on, as it does for other operations.
+  if (STORE_STACK_TRACES && typeof e?.stack === "string") {
+    error.stackTrace = e.stack.split(/\r?\n/);
+  }
+  return { itemIdentifier: itemId, error };
 }
 
 async function runPool<T, R>(
@@ -169,7 +174,8 @@ async function runPool<T, R>(
 }
 
 /**
- * Wrap a Lambda as an itemResults processor (pass report "failures" for itemFailures).
+ * Wrap a Lambda as an item handler, which reports an outcome for each item. Pair it with
+ * `DistributedMapProcessor.reportItemOutcomes`.
  *
  * Items are processed one at a time by default. Raising `concurrency` overlaps the handler with
  * itself, so `fn` must tolerate several calls being in flight at once.
@@ -183,14 +189,11 @@ export function createDistributedMapItemHandler<TItem, TOutput>(
     resultSerdes?: Serdes<TOutput>;
     /** Handlers in flight at once. Defaults to 1, and must be an integer of 1 or more. */
     concurrency?: number;
-    report?: "results" | "failures";
   },
 ): (event: unknown, context: Context) => Promise<ItemHandlerResponse> {
-  assertReport(opts?.report);
   assertConcurrency(opts?.concurrency);
   const itemSerdes = (opts?.itemSerdes ?? defaultSerdes) as AnySerdes;
   const resultSerdes = (opts?.resultSerdes ?? defaultSerdes) as AnySerdes;
-  const report: ItemReport = opts?.report ?? "results";
   const concurrency = opts?.concurrency ?? 1;
 
   return async (event: unknown): Promise<ItemHandlerResponse> => {
@@ -202,9 +205,7 @@ export function createDistributedMapItemHandler<TItem, TOutput>(
       const value = await fn(
         (await toItem(itemSerdes, record.body, ctx)) as TItem,
       );
-      return report === "results"
-        ? await toOutput(resultSerdes, value, ctx)
-        : null;
+      return await toOutput(resultSerdes, value, ctx);
     });
 
     const results: ItemResult[] = [];
@@ -214,17 +215,25 @@ export function createDistributedMapItemHandler<TItem, TOutput>(
       const outcome = outcomes[i];
       if (!outcome.ok) {
         failures.push(errorEntry(record.itemId, outcome.error));
-      } else if (report === "results") {
-        results.push({ itemIdentifier: record.itemId, output: outcome.value });
+      } else {
+        // An item with no output is listed without one, and succeeds with no output.
+        results.push({
+          itemIdentifier: record.itemId,
+          ...(outcome.value !== undefined ? { output: outcome.value } : {}),
+        });
       }
     }
 
-    if (report === "failures") return { batchItemFailures: failures };
     return { batchItemResults: results, batchItemFailures: failures };
   };
 }
 
-/** Wrap a Lambda as a batch processor, where returning passes the batch and throwing fails it. @public */
+/**
+ * Wrap a Lambda as a batch handler, where returning passes the batch and throwing fails it.
+ * Pair it with `DistributedMapProcessor.reportBatchOutcome`.
+ *
+ * @public
+ */
 export function createDistributedMapBatchHandler<TItem>(
   fn: (items: TItem[]) => void | Promise<void>,
   opts?: { itemSerdes?: Serdes<TItem> },
@@ -296,16 +305,13 @@ export function createDistributedMapItemHandlerWithDurableExecution<
   opts?: {
     itemSerdes?: Serdes<TItem>;
     resultSerdes?: Serdes<TOutput>;
-    report?: "results" | "failures";
     /** Children in flight at once. Defaults to 1, and must be an integer of 1 or more. */
     concurrency?: number;
   },
 ): DurableLambdaHandler {
-  assertReport(opts?.report);
   assertConcurrency(opts?.concurrency);
   const itemSerdes = (opts?.itemSerdes ?? defaultSerdes) as AnySerdes;
   const resultSerdes = (opts?.resultSerdes ?? defaultSerdes) as AnySerdes;
-  const report: ItemReport = opts?.report ?? "results";
   const concurrency = opts?.concurrency ?? 1;
 
   return withDurableExecution(
@@ -325,9 +331,7 @@ export function createDistributedMapItemHandlerWithDurableExecution<
             ctx,
             (await toItem(itemSerdes, body, serdesCtx)) as TItem,
           );
-          return report === "results"
-            ? await toOutput(resultSerdes, value, serdesCtx)
-            : null;
+          return await toOutput(resultSerdes, value, serdesCtx);
         },
         {
           maxConcurrency: concurrency,
@@ -341,12 +345,11 @@ export function createDistributedMapItemHandlerWithDurableExecution<
         const itemId = records[item.index].itemId;
         // Only SUCCEEDED yields an output. FAILED or non-terminal is a failure.
         if (item.status === BatchItemStatus.SUCCEEDED) {
-          if (report === "results") {
-            results.push({
-              itemIdentifier: itemId,
-              output: item.result ?? null,
-            });
-          }
+          // An item with no output is listed without one, and succeeds with no output.
+          results.push({
+            itemIdentifier: itemId,
+            ...(item.result !== undefined ? { output: item.result } : {}),
+          });
         } else {
           failures.push(
             errorEntry(
@@ -357,7 +360,6 @@ export function createDistributedMapItemHandlerWithDurableExecution<
         }
       }
 
-      if (report === "failures") return { batchItemFailures: failures };
       return { batchItemResults: results, batchItemFailures: failures };
     },
   );

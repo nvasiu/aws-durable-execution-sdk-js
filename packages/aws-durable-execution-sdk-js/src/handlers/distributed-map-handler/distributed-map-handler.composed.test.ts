@@ -14,6 +14,7 @@ import {
 } from "../../distributed-map-helpers";
 import {
   DistributedMapItemStatus,
+  DistributedMapProcessor,
   DistributedMapStatus,
   OperationSubType,
 } from "../../types";
@@ -124,7 +125,6 @@ describe("Distributed map processor-to-result composed tests", () => {
           StartTimestamp: new Date(),
           Status: OperationStatus.SUCCEEDED,
           DistributedMapDetails: {
-            CompletionReason: "ALL_COMPLETED",
             SuccessCount: 3,
             FailureCount: 1,
             UnprocessedCount: 0,
@@ -135,10 +135,11 @@ describe("Distributed map processor-to-result composed tests", () => {
       ],
     });
 
-    const result = await context.distributedMap<Order, Receipt>(
+    // The result type comes from the processor's declared output type.
+    const result = await context.distributedMap(
       "charge",
       orders,
-      { functionName: "processor", responseMode: "itemResults" },
+      DistributedMapProcessor.reportItemOutcomes<Receipt>("processor"),
       2,
       { collectResults: true, resultSerdes },
     );

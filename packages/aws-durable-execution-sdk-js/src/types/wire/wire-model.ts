@@ -164,10 +164,10 @@ export interface DistributedMapResultItemDetails {
 export interface DistributedMapDetails {
   /** ARN of the managed distributed map run. */
   DistributedMapRunArn?: string | undefined;
-  /** Reason the run reached its terminal status. */
-  CompletionReason?: string | undefined;
-  /** Human-readable completion detail, when present. */
-  CompletionDetails?: string | undefined;
+  /** True only when the service read the complete source. Absent before the run is created. */
+  SourceExhausted?: boolean | undefined;
+  /** Why the run did not succeed, when error details are available. Absent for SUCCEEDED. */
+  Error?: ErrorObject | undefined;
   /** Total items read from the source, when known. */
   TotalCount?: number | undefined;
   /** Number of items that succeeded. */
@@ -309,15 +309,46 @@ export interface DistributedMapCsvFormatOptions {
   Delimiter?: string;
 }
 
-/** S3 source configuration for a distributed map. @public */
-export interface DistributedMapS3SourceOptions {
-  Bucket: string;
-  Key?: string;
-  KeyPrefix?: string;
-  Transform?: "NONE" | "LOAD_AND_FLATTEN";
-  ExpectedBucketOwner?: string;
-  Format?: "JSON_LINES" | "JSON_ARRAY" | "CSV";
+/** How the content of an S3 object is split into items. @public */
+export type DistributedMapS3Format = "JSON_LINES" | "JSON_ARRAY" | "CSV";
+
+/** What an S3 source reads. @public */
+export type DistributedMapS3SourceType =
+  | "OBJECT"
+  | "LISTED_OBJECT_METADATA"
+  | "LISTED_OBJECTS";
+
+/** An S3 source that reads one object. @public */
+export interface DistributedMapS3ObjectOptions {
+  Key: string;
+  Format: DistributedMapS3Format;
   CsvFormatOptions?: DistributedMapCsvFormatOptions;
+}
+
+/** An S3 source that lists the objects under a prefix without reading them. @public */
+export interface DistributedMapS3ListedObjectMetadataOptions {
+  KeyPrefix: string;
+}
+
+/** An S3 source that lists the objects under a prefix and reads every listed object. @public */
+export interface DistributedMapS3ListedObjectsOptions {
+  KeyPrefix: string;
+  Format: DistributedMapS3Format;
+  CsvFormatOptions?: DistributedMapCsvFormatOptions;
+}
+
+/**
+ * S3 source configuration for a distributed map. Set the one config block that matches Type.
+ *
+ * @public
+ */
+export interface DistributedMapS3SourceOptions {
+  Type: DistributedMapS3SourceType;
+  Bucket: string;
+  ExpectedBucketOwner?: string;
+  ObjectConfig?: DistributedMapS3ObjectOptions;
+  ListedObjectMetadataConfig?: DistributedMapS3ListedObjectMetadataOptions;
+  ListedObjectsConfig?: DistributedMapS3ListedObjectsOptions;
 }
 
 /** Inline source configuration for a distributed map. @public */
@@ -342,9 +373,7 @@ export interface DistributedMapSourceOptions {
 }
 
 /** Processor mode values sent on the wire. @public */
-export type DistributedMapFunctionResponseType =
-  | "REPORT_BATCH_ITEM_FAILURES"
-  | "REPORT_BATCH_ITEM_RESULTS";
+export type DistributedMapFunctionResponseType = "REPORT_BATCH_ITEM_OUTCOMES";
 
 /** Destination record fields sent on the wire. @public */
 export type DistributedMapDestinationInclude = "INPUT" | "OUTPUT" | "ERROR";

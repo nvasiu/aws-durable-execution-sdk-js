@@ -1,8 +1,9 @@
 import { createDistributedMapHandler } from "./distributed-map-handler";
-import { ExecutionContext } from "../../types";
+import { DistributedMapProcessor, ExecutionContext } from "../../types";
 import { OperationStatus } from "../../types/wire";
 import { Checkpoint } from "../../utils/checkpoint/checkpoint-helper";
 import { DurableInstrumentationPlugin } from "../../types/plugin";
+import { DistributedMapError } from "../../errors/durable-error/durable-error";
 
 jest.mock("../../utils/logger/logger");
 
@@ -11,11 +12,10 @@ describe("Distributed map handler - plugin hooks", () => {
   let mockCheckpoint: Checkpoint;
   let createStepId: () => string;
   let mockPlugin: jest.Mocked<DurableInstrumentationPlugin>;
-  const processor = { functionName: "proc-fn" };
+  const processor = DistributedMapProcessor.reportBatchOutcome("proc-fn");
 
   const succeededDetails = {
     Status: "SUCCEEDED",
-    CompletionReason: "ALL_COMPLETED",
     SuccessCount: 0,
     FailureCount: 0,
   };
@@ -103,7 +103,7 @@ describe("Distributed map handler - plugin hooks", () => {
     async (_label, status) => {
       (mockContext.getStepData as jest.Mock).mockReturnValue({
         Status: status,
-        DistributedMapDetails: { CompletionReason: "ALL_COMPLETED" },
+        DistributedMapDetails: {},
       });
 
       // The operation resolves with the summary; only the plugin sees the error.
@@ -116,6 +116,30 @@ describe("Distributed map handler - plugin hooks", () => {
       );
     },
   );
+
+  it("passes the run Error's details to onOperationEnd", async () => {
+    (mockContext.getStepData as jest.Mock).mockReturnValue({
+      Status: OperationStatus.FAILED,
+      DistributedMapDetails: {
+        Error: {
+          ErrorType: "SourceReadError",
+          ErrorMessage: "object not found",
+          ErrorData: '{"key":"k"}',
+        },
+      },
+    });
+
+    await makeHandler()([], processor, 2);
+
+    const { error } = (mockPlugin.onOperationEnd as jest.Mock).mock
+      .calls[0][0] as {
+      error: DistributedMapError;
+    };
+    expect(error).toBeInstanceOf(DistributedMapError);
+    expect(error.message).toBe("Map run ended FAILED: object not found");
+    expect(error.cause?.name).toBe("SourceReadError");
+    expect(error.errorData).toBe('{"key":"k"}');
+  });
 
   it("does not throw when plugin hooks are undefined", async () => {
     (mockContext.getStepData as jest.Mock).mockReturnValue({

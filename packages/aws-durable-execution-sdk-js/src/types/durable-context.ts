@@ -24,8 +24,8 @@ import {
   BatchResult,
 } from "./batch";
 import {
-  DistributedMapSourceConfig,
-  DistributedMapProcessorConfig,
+  DistributedMapSource,
+  DistributedMapProcessor,
   DistributedMapConfig,
   DistributedMapSummary,
   DistributedMapResult,
@@ -467,29 +467,29 @@ export interface DurableContext<TLogger extends DurableLogger = DurableLogger> {
   /**
    * Starts a Lambda Distributed Map run and returns per-item results inline.
    * @param name - Step name for tracking and debugging
-   * @param source - A DistributedMapSourceConfig, or a plain array as inline shorthand
-   * @param processor - The processor Lambda configuration
+   * @param source - A source built with a DistributedMapSource factory, or a plain array as an inline source
+   * @param processor - A processor built with a DistributedMapProcessor factory
    * @param maxConcurrency - Maximum concurrent processor invocations (positive integer). Required, with no service default.
    * @param config - Configuration with `collectResults: true`, plus completion, timeout, and destination
    */
   distributedMap<TItem, TOutput>(
     name: string | undefined,
-    source: DistributedMapSourceConfig<TItem> | TItem[],
-    processor: DistributedMapProcessorConfig,
+    source: DistributedMapSource<TItem> | TItem[],
+    processor: DistributedMapProcessor<TOutput>,
     maxConcurrency: number,
     config: DistributedMapConfig<TOutput> & { collectResults: true },
   ): DurablePromise<DistributedMapResult<TOutput>>;
 
   /**
    * Starts a Lambda Distributed Map run and returns per-item results inline.
-   * @param source - A DistributedMapSourceConfig, or a plain array as inline shorthand
-   * @param processor - The processor Lambda configuration
+   * @param source - A source built with a DistributedMapSource factory, or a plain array as an inline source
+   * @param processor - A processor built with a DistributedMapProcessor factory
    * @param maxConcurrency - Maximum concurrent processor invocations (positive integer). Required, with no service default.
    * @param config - Configuration with `collectResults: true`, plus completion, timeout, and destination
    */
   distributedMap<TItem, TOutput>(
-    source: DistributedMapSourceConfig<TItem> | TItem[],
-    processor: DistributedMapProcessorConfig,
+    source: DistributedMapSource<TItem> | TItem[],
+    processor: DistributedMapProcessor<TOutput>,
     maxConcurrency: number,
     config: DistributedMapConfig<TOutput> & { collectResults: true },
   ): DurablePromise<DistributedMapResult<TOutput>>;
@@ -497,29 +497,29 @@ export interface DurableContext<TLogger extends DurableLogger = DurableLogger> {
   /**
    * Starts a Lambda Distributed Map run over a source, processed by a Lambda function.
    * @param name - Step name for tracking and debugging
-   * @param source - A DistributedMapSourceConfig, or a plain array as inline shorthand
-   * @param processor - The processor Lambda configuration
+   * @param source - A source built with a DistributedMapSource factory, or a plain array as an inline source
+   * @param processor - A processor built with a DistributedMapProcessor factory
    * @param maxConcurrency - Maximum concurrent processor invocations (positive integer). Required, with no service default.
    * @param config - Optional configuration for completion, timeout, and destination
    */
   distributedMap<TItem, TOutput>(
     name: string | undefined,
-    source: DistributedMapSourceConfig<TItem> | TItem[],
-    processor: DistributedMapProcessorConfig,
+    source: DistributedMapSource<TItem> | TItem[],
+    processor: DistributedMapProcessor<TOutput>,
     maxConcurrency: number,
     config?: DistributedMapConfig<TOutput>,
   ): DurablePromise<DistributedMapSummary>;
 
   /**
    * Starts a Lambda Distributed Map run over a source, processed by a Lambda function.
-   * @param source - A DistributedMapSourceConfig, or a plain array as inline shorthand
-   * @param processor - The processor Lambda configuration
+   * @param source - A source built with a DistributedMapSource factory, or a plain array as an inline source
+   * @param processor - A processor built with a DistributedMapProcessor factory
    * @param maxConcurrency - Maximum concurrent processor invocations (positive integer). Required, with no service default.
    * @param config - Optional configuration for completion, timeout, and destination
    */
   distributedMap<TItem, TOutput>(
-    source: DistributedMapSourceConfig<TItem> | TItem[],
-    processor: DistributedMapProcessorConfig,
+    source: DistributedMapSource<TItem> | TItem[],
+    processor: DistributedMapProcessor<TOutput>,
     maxConcurrency: number,
     config?: DistributedMapConfig<TOutput>,
   ): DurablePromise<DistributedMapSummary>;

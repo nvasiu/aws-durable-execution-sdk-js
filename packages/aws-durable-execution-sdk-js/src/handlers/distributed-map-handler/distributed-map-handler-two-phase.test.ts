@@ -1,7 +1,8 @@
 import { createDistributedMapHandler } from "./distributed-map-handler";
 import {
   ExecutionContext,
-  DistributedMapProcessorConfig,
+  DistributedMapProcessor,
+  DistributedMapSource,
   DistributedMapSummary,
 } from "../../types";
 import { DurablePromise } from "../../types/durable-promise";
@@ -14,7 +15,7 @@ describe("Distributed map handler two-phase execution", () => {
   let mockContext: ExecutionContext;
   let mockCheckpoint: Checkpoint;
   let createStepId: () => string;
-  const processor: DistributedMapProcessorConfig = { functionName: "proc-fn" };
+  const processor = DistributedMapProcessor.reportBatchOutcome("proc-fn");
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -103,7 +104,6 @@ describe("Distributed map handler two-phase execution", () => {
       .mockReturnValue({
         Status: OperationStatus.SUCCEEDED,
         DistributedMapDetails: {
-          CompletionReason: "ALL_COMPLETED",
           SuccessCount: 1,
           FailureCount: 0,
         },
@@ -115,16 +115,13 @@ describe("Distributed map handler two-phase execution", () => {
       createStepId,
     );
 
-    const source = {
-      inline: {
-        items: [1],
-        serdes: {
-          serialize: async (): Promise<string> => "not json {",
-          deserialize: async (d: string | undefined): Promise<number> =>
-            d as unknown as number,
-        },
+    const source = DistributedMapSource.inline([1], {
+      serdes: {
+        serialize: async (): Promise<string> => "not json {",
+        deserialize: async (d: string | undefined): Promise<number> =>
+          d as unknown as number,
       },
-    };
+    });
     const result = await (handler(
       source,
       processor,
@@ -144,7 +141,6 @@ describe("Distributed map handler two-phase execution", () => {
       .mockReturnValue({
         Status: OperationStatus.FAILED,
         DistributedMapDetails: {
-          CompletionReason: "FAILURE_TOLERANCE_EXCEEDED",
           TotalCount: 10,
           SuccessCount: 7,
           FailureCount: 3,
@@ -165,7 +161,6 @@ describe("Distributed map handler two-phase execution", () => {
     ) as DurablePromise<DistributedMapSummary>);
 
     expect(result.status).toBe("FAILED");
-    expect(result.completionReason).toBe("FAILURE_TOLERANCE_EXCEEDED");
     expect(result.successCount).toBe(7);
     expect(result.failureCount).toBe(3);
     expect(result.totalCount).toBe(10);
@@ -180,7 +175,6 @@ describe("Distributed map handler two-phase execution", () => {
       .mockReturnValue({
         Status: OperationStatus.SUCCEEDED,
         DistributedMapDetails: {
-          CompletionReason: "ALL_COMPLETED",
           SuccessCount: 0,
           FailureCount: 0,
         },
@@ -203,6 +197,5 @@ describe("Distributed map handler two-phase execution", () => {
     expect(mockCheckpoint.markOperationAwaited).toHaveBeenCalledWith("step-1");
     expect(mockCheckpoint.waitForStatusChange).toHaveBeenCalledWith("step-1");
     expect(result.status).toBe("SUCCEEDED");
-    expect(result.completionReason).toBe("ALL_COMPLETED");
   });
 });

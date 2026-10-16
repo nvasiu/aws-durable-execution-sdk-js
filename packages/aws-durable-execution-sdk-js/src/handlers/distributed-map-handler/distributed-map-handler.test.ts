@@ -1,10 +1,9 @@
 import {
   buildSummary,
   toDistributedMapDestinationOptions,
-  toDistributedMapProcessorOptions,
-  toDistributedMapS3SourceOptions,
 } from "./distributed-map-handler";
 import {
+  DistributedMapDestination,
   DistributedMapItemStatus,
   DistributedMapResult,
   DistributedMapStatus,
@@ -26,7 +25,6 @@ function detailsWith(
   results: NonNullable<DistributedMapDetails["Results"]>,
 ): DistributedMapDetails {
   return {
-    CompletionReason: "ALL_COMPLETED",
     SuccessCount: results.length,
     FailureCount: 0,
     UnprocessedCount: 0,
@@ -80,25 +78,31 @@ describe("Distributed map handler second-pass fixes", () => {
     expect(result.getResults()).toEqual([0, false, "", [], {}]);
     expect(result.getResults()).toHaveLength(5);
   });
-
-  it("serializes a processor retry config with only a duration set", () => {
-    const wire = toDistributedMapProcessorOptions({
-      functionName: "proc-fn",
-      maxRetryDuration: { minutes: 5 },
-    });
-
-    expect(wire.MaxRetryDurationSeconds).toBe(300);
-    expect(wire.MaxRetryAttempts).toBeUndefined();
-  });
 });
 
 describe("Distributed map handler enum parsing", () => {
   const cfg = {};
 
-  it("throws when CompletionReason is missing on a completed run", async () => {
+  it("resolves a completed run that carries only counts", async () => {
+    const summary = await buildSummary(
+      { FailureCount: 0 },
+      cfg,
+      "step-0",
+      undefined,
+      fakeContext,
+      defaultSerdes,
+      "SUCCEEDED",
+    );
+
+    expect(summary.status).toBe("SUCCEEDED");
+    expect(summary.sourceExhausted).toBeUndefined();
+    expect(summary.error).toBeUndefined();
+  });
+
+  it("throws when a created run carries no SourceExhausted", async () => {
     await expect(
       buildSummary(
-        { FailureCount: 0 },
+        { DistributedMapRunArn: "arn:run", FailureCount: 0 },
         cfg,
         "step-0",
         undefined,
@@ -106,12 +110,16 @@ describe("Distributed map handler enum parsing", () => {
         defaultSerdes,
         "SUCCEEDED",
       ),
-    ).rejects.toThrow(DistributedMapError);
+    ).rejects.toThrow("missing distributed map SourceExhausted from backend");
   });
 
-  it("maps an unrecognized CompletionReason to the UNKNOWN_TO_SDK_VERSION sentinel", async () => {
+  it("accepts a created run that carries SourceExhausted", async () => {
     const summary = await buildSummary(
-      { CompletionReason: "BRAND_NEW_REASON", FailureCount: 0 },
+      {
+        DistributedMapRunArn: "arn:run",
+        SourceExhausted: true,
+        FailureCount: 0,
+      },
       cfg,
       "step-0",
       undefined,
@@ -119,28 +127,32 @@ describe("Distributed map handler enum parsing", () => {
       defaultSerdes,
       "SUCCEEDED",
     );
-
-    expect(summary.completionReason).toBe("UNKNOWN_TO_SDK_VERSION");
+    expect(summary.distributedMapRunArn).toBe("arn:run");
+    expect(summary.sourceExhausted).toBe(true);
   });
 
-  it("passes a known CompletionReason through unchanged", async () => {
+  it("passes SourceExhausted and the run Error through", async () => {
+    const error = {
+      ErrorType: "SourceReadError",
+      ErrorMessage: "object not found",
+    };
     const summary = await buildSummary(
-      { CompletionReason: "ALL_COMPLETED", FailureCount: 0 },
+      { SourceExhausted: false, Error: error, FailureCount: 0 },
       cfg,
       "step-0",
       undefined,
       fakeContext,
       defaultSerdes,
-      "SUCCEEDED",
+      "FAILED",
     );
 
-    expect(summary.completionReason).toBe("ALL_COMPLETED");
-    expect(summary.status).toBe("SUCCEEDED");
+    expect(summary.sourceExhausted).toBe(false);
+    expect(summary.error).toEqual(error);
   });
 
   it("derives the run status from the operation status", async () => {
     const summary = await buildSummary(
-      { CompletionReason: "ALL_COMPLETED", FailureCount: 0 },
+      { FailureCount: 0 },
       cfg,
       "step-0",
       undefined,
@@ -150,12 +162,11 @@ describe("Distributed map handler enum parsing", () => {
     );
 
     expect(summary.status).toBe("SUCCEEDED");
-    expect(summary.completionReason).toBe("ALL_COMPLETED");
   });
 
   it("reports a non-succeeded operation status as the run status", async () => {
     const summary = await buildSummary(
-      { CompletionReason: "FAILURE_TOLERANCE_EXCEEDED", FailureCount: 1 },
+      { FailureCount: 1 },
       cfg,
       "step-0",
       undefined,
@@ -169,7 +180,7 @@ describe("Distributed map handler enum parsing", () => {
 
   it("maps an unknown run Status to the UNKNOWN_TO_SDK_VERSION sentinel", async () => {
     const summary = await buildSummary(
-      { CompletionReason: "ALL_COMPLETED" },
+      {},
       cfg,
       "step-0",
       undefined,
@@ -184,7 +195,7 @@ describe("Distributed map handler enum parsing", () => {
   it("throws on a missing run Status", async () => {
     await expect(
       buildSummary(
-        { CompletionReason: "ALL_COMPLETED" },
+        {},
         cfg,
         "step-0",
         undefined,
@@ -198,7 +209,6 @@ describe("Distributed map handler enum parsing", () => {
   it("maps an unknown per-item Status to the UNKNOWN_TO_SDK_VERSION sentinel", async () => {
     const result = (await buildSummary(
       {
-        CompletionReason: "ALL_COMPLETED",
         FailureCount: 0,
         Results: [{ ItemId: "0", Status: "BOGUS" }],
       },
@@ -220,7 +230,6 @@ describe("Distributed map handler enum parsing", () => {
     await expect(
       buildSummary(
         {
-          CompletionReason: "ALL_COMPLETED",
           FailureCount: 0,
           Results: [{ ItemId: "0" }],
         },
@@ -239,7 +248,6 @@ describe("Distributed map handler collected result access", () => {
   it("keeps a succeeded item with no output in getResults as undefined", async () => {
     const result = (await buildSummary(
       {
-        CompletionReason: "ALL_COMPLETED",
         SuccessCount: 1,
         FailureCount: 0,
         Results: [{ ItemId: "0", Status: "SUCCEEDED" }],
@@ -260,7 +268,6 @@ describe("Distributed map handler collected result access", () => {
   it("keeps a failed item with no error in getErrors as undefined", async () => {
     const result = (await buildSummary(
       {
-        CompletionReason: "ALL_COMPLETED",
         SuccessCount: 0,
         FailureCount: 1,
         Results: [{ ItemId: "0", Status: "FAILED" }],
@@ -281,7 +288,6 @@ describe("Distributed map handler collected result access", () => {
   it("builds a failed item's error as a DistributedMapItemError", async () => {
     const result = (await buildSummary(
       {
-        CompletionReason: "ALL_COMPLETED",
         SuccessCount: 0,
         FailureCount: 1,
         Results: [
@@ -320,7 +326,6 @@ describe("Distributed map throwIfError", () => {
     results: NonNullable<DistributedMapDetails["Results"]>,
     failureCount: number,
   ): DistributedMapDetails => ({
-    CompletionReason: "ALL_COMPLETED",
     SuccessCount: results.filter((r) => r.Status === "SUCCEEDED").length,
     FailureCount: failureCount,
     UnprocessedCount: 0,
@@ -382,7 +387,6 @@ describe("Distributed map throwIfError", () => {
   it("throws a run-level error for a non-succeeded run", async () => {
     const result = await buildResult(
       {
-        CompletionReason: "FAILURE_TOLERANCE_EXCEEDED",
         SuccessCount: 0,
         FailureCount: 1,
         UnprocessedCount: 0,
@@ -391,6 +395,34 @@ describe("Distributed map throwIfError", () => {
       "FAILED",
     );
     expect(() => result.throwIfError()).toThrow("Map run ended FAILED");
+  });
+
+  it("throws the run Error's message, type and data for a non-succeeded run", async () => {
+    const result = await buildResult(
+      {
+        Error: {
+          ErrorType: "SourceReadError",
+          ErrorMessage: "object not found",
+          ErrorData: '{"key":"k"}',
+          StackTrace: ["at reader"],
+        },
+        SuccessCount: 0,
+        FailureCount: 0,
+        UnprocessedCount: 0,
+      },
+      "FAILED",
+    );
+    let thrown: DistributedMapError | undefined;
+    try {
+      result.throwIfError();
+    } catch (e) {
+      thrown = e as DistributedMapError;
+    }
+    expect(thrown).toBeInstanceOf(DistributedMapError);
+    expect(thrown?.message).toBe("Map run ended FAILED: object not found");
+    expect(thrown?.cause?.name).toBe("SourceReadError");
+    expect(thrown?.cause?.stack).toBe("at reader");
+    expect(thrown?.errorData).toBe('{"key":"k"}');
   });
 
   it("does not throw on a clean success", async () => {
@@ -403,7 +435,6 @@ describe("Distributed map throwIfError", () => {
   it("throws from the summary alone when result collection is off", async () => {
     const summary = await buildSummary(
       {
-        CompletionReason: "ALL_COMPLETED",
         SuccessCount: 0,
         FailureCount: 3,
       },
@@ -420,89 +451,23 @@ describe("Distributed map throwIfError", () => {
   });
 });
 
-describe("Distributed map config to wire mapping", () => {
-  it("maps a key to an object source", () => {
-    expect(
-      toDistributedMapS3SourceOptions({
-        bucket: "b",
-        key: "k",
-        format: "JSON_ARRAY",
-      }),
-    ).toEqual({
-      Bucket: "b",
-      Key: "k",
-      Format: "JSON_ARRAY",
-    });
-  });
-
-  it("maps a prefix with a format to a flattened prefix source", () => {
-    expect(
-      toDistributedMapS3SourceOptions({
-        bucket: "b",
-        prefix: "p/",
-        format: "JSON_LINES",
-      }),
-    ).toEqual({
-      Bucket: "b",
-      KeyPrefix: "p/",
-      Transform: "LOAD_AND_FLATTEN",
-      Format: "JSON_LINES",
-    });
-  });
-
-  it("maps a prefix with no format to an object listing", () => {
-    expect(
-      toDistributedMapS3SourceOptions({ bucket: "b", prefix: "p/" }),
-    ).toEqual({
-      Bucket: "b",
-      KeyPrefix: "p/",
-      Transform: "NONE",
-    });
-  });
-
-  it("defaults a CSV source to the first row as header and a COMMA delimiter", () => {
-    expect(
-      toDistributedMapS3SourceOptions({ bucket: "b", key: "k", format: "CSV" })
-        .CsvFormatOptions,
-    ).toEqual({
-      HeaderLocation: "FIRST_ROW",
-      Delimiter: "COMMA",
-    });
-  });
-
-  it("maps CSV headers to a GIVEN header location", () => {
-    expect(
-      toDistributedMapS3SourceOptions({
-        bucket: "b",
-        key: "k",
-        format: "CSV",
-        csv: { headers: ["a"], delimiter: "TAB" },
-      }).CsvFormatOptions,
-    ).toEqual({ HeaderLocation: "GIVEN", Headers: ["a"], Delimiter: "TAB" });
-  });
-
-  it("sends no response type when responseMode is absent", () => {
-    expect(
-      toDistributedMapProcessorOptions({ functionName: "fn" })
-        .FunctionResponseTypes,
-    ).toBeUndefined();
-    expect(
-      toDistributedMapProcessorOptions({
-        functionName: "fn",
-        responseMode: "itemResults",
-      }).FunctionResponseTypes,
-    ).toEqual(["REPORT_BATCH_ITEM_RESULTS"]);
-  });
-
-  it("applies the destination include defaults", () => {
+describe("Distributed map destination to wire mapping", () => {
+  it("sends the destinations the factories built", () => {
     const wire = toDistributedMapDestinationOptions({
       destination: {
-        onSuccess: { bucket: "b", prefix: "out/" },
-        onFailure: { bucket: "b", prefix: "err/" },
+        onSuccess: DistributedMapDestination.s3.successes("s3://b/out/"),
+        onFailure: DistributedMapDestination.s3.failures("s3://b/err/"),
       },
     });
     expect(wire?.OnSuccess?.Include).toEqual(["OUTPUT"]);
     expect(wire?.OnSuccess?.S3DestinationConfig?.KeyPrefix).toBe("out/");
     expect(wire?.OnFailure?.Include).toEqual(["INPUT", "ERROR"]);
+  });
+
+  it("sends no destination when neither is set", () => {
+    expect(toDistributedMapDestinationOptions({})).toBeUndefined();
+    expect(
+      toDistributedMapDestinationOptions({ destination: {} }),
+    ).toBeUndefined();
   });
 });

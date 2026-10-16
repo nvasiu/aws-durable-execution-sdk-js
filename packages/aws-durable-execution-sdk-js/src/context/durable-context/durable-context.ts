@@ -26,8 +26,8 @@ import {
   BatchResult,
   DurablePromise,
   DurableLogData,
-  DistributedMapSourceConfig,
-  DistributedMapProcessorConfig,
+  DistributedMapSource,
+  DistributedMapProcessor,
   DistributedMapConfig,
   DistributedMapSummary,
   DistributedMapResult,
@@ -432,37 +432,37 @@ export class DurableContextImpl<Logger extends DurableLogger>
 
   distributedMap<TItem, TOutput>(
     name: string | undefined,
-    source: DistributedMapSourceConfig<TItem> | TItem[],
-    processor: DistributedMapProcessorConfig,
+    source: DistributedMapSource<TItem> | TItem[],
+    processor: DistributedMapProcessor<TOutput>,
     maxConcurrency: number,
     config: DistributedMapConfig<TOutput> & { collectResults: true },
   ): DurablePromise<DistributedMapResult<TOutput>>;
   distributedMap<TItem, TOutput>(
-    source: DistributedMapSourceConfig<TItem> | TItem[],
-    processor: DistributedMapProcessorConfig,
+    source: DistributedMapSource<TItem> | TItem[],
+    processor: DistributedMapProcessor<TOutput>,
     maxConcurrency: number,
     config: DistributedMapConfig<TOutput> & { collectResults: true },
   ): DurablePromise<DistributedMapResult<TOutput>>;
   distributedMap<TItem, TOutput>(
     name: string | undefined,
-    source: DistributedMapSourceConfig<TItem> | TItem[],
-    processor: DistributedMapProcessorConfig,
+    source: DistributedMapSource<TItem> | TItem[],
+    processor: DistributedMapProcessor<TOutput>,
     maxConcurrency: number,
     config?: DistributedMapConfig<TOutput>,
   ): DurablePromise<DistributedMapSummary>;
   distributedMap<TItem, TOutput>(
-    source: DistributedMapSourceConfig<TItem> | TItem[],
-    processor: DistributedMapProcessorConfig,
+    source: DistributedMapSource<TItem> | TItem[],
+    processor: DistributedMapProcessor<TOutput>,
     maxConcurrency: number,
     config?: DistributedMapConfig<TOutput>,
   ): DurablePromise<DistributedMapSummary>;
   distributedMap<TItem, TOutput>(
-    arg0: string | undefined | DistributedMapSourceConfig<TItem> | TItem[],
+    arg0: string | undefined | DistributedMapSource<TItem> | TItem[],
     arg1:
-      | DistributedMapSourceConfig<TItem>
+      | DistributedMapSource<TItem>
       | TItem[]
-      | DistributedMapProcessorConfig,
-    arg2: DistributedMapProcessorConfig | number,
+      | DistributedMapProcessor<TOutput>,
+    arg2: DistributedMapProcessor<TOutput> | number,
     arg3?: number | DistributedMapConfig<TOutput>,
     arg4?: DistributedMapConfig<TOutput>,
   ): DurablePromise<DistributedMapSummary | DistributedMapResult<TOutput>> {

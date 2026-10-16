@@ -4,20 +4,17 @@ import {
   DurablePromise,
   OperationLifecycleState,
   DistributedMapConfig,
-  DistributedMapProcessorConfig,
-  DistributedMapS3SourceConfig,
-  DistributedMapSourceConfig,
+  DistributedMapProcessor,
+  DistributedMapSource,
   DistributedMapSummary,
   DistributedMapResult,
   DistributedMapResultItem,
   DistributedMapStatus,
   DistributedMapItemStatus,
-  DistributedMapCompletionReason,
-  DISTRIBUTED_MAP_COMPLETION_REASONS,
   assertCompletionConfig,
-  assertDestinationConfig,
-  assertProcessorConfig,
-  assertSourceConfig,
+  assertDestination,
+  assertProcessor,
+  assertSource,
 } from "../../types";
 import {
   DistributedMapError,
@@ -29,13 +26,10 @@ import {
   OperationType,
   DistributedMapOptions,
   DistributedMapSourceOptions,
-  DistributedMapProcessorOptions,
   DistributedMapDestinationOptions,
-  DistributedMapFunctionResponseType,
-  DistributedMapDestinationInclude,
   DistributedMapCompletionOptions,
   DistributedMapDetails,
-  DistributedMapS3SourceOptions,
+  ErrorObject,
 } from "../../types/wire";
 import { log } from "../../utils/logger/logger";
 import { Checkpoint } from "../../utils/checkpoint/checkpoint-helper";
@@ -60,17 +54,23 @@ import { TerminationReason } from "../../termination-manager/types";
 
 type AnyDistributedMapConfig = DistributedMapConfig<unknown>;
 
-const UNLIMITED_RETRY_WIRE = -1;
 const INLINE_SIZE_LIMIT = 1024 * 1024;
 const READER_STATE_LIMIT = 32 * 1024;
 const MAX_TIMEOUT_SECONDS = 7776000; // 90 days
 
-/** DistributedMapError for a non-succeeded operation status. */
-function operationDidNotSucceedError(
-  status: OperationStatus | undefined,
+/**
+ * DistributedMapError for a run whose operation did not succeed. The message, cause and data
+ * come from the run's recorded Error when the service sent one.
+ */
+function runDidNotSucceedError(
+  status: string | undefined,
+  error: ErrorObject | undefined,
 ): DistributedMapError {
+  const ended = `Map run ended ${status ?? "unknown"}`;
   return new DistributedMapError(
-    `Distributed map operation did not succeed (status: ${status ?? "unknown"})`,
+    error?.ErrorMessage ? `${ended}: ${error.ErrorMessage}` : ended,
+    error ? causeFrom(error) : undefined,
+    error?.ErrorData,
   );
 }
 
@@ -103,20 +103,16 @@ function validateConfig(
   config: AnyDistributedMapConfig | undefined,
   terminationManager: TerminationManager,
 ): boolean {
-  if (
-    !Number.isInteger(maxConcurrency) ||
-    maxConcurrency < 1 ||
-    maxConcurrency > 10000
-  ) {
+  if (!Number.isInteger(maxConcurrency) || maxConcurrency < 1) {
     return terminateForConfig(
-      `Invalid maxConcurrency: ${maxConcurrency}. Must be an integer from 1 through 10000.`,
+      `Invalid maxConcurrency: ${maxConcurrency}. Must be an integer greater than zero.`,
       terminationManager,
     );
   }
   try {
-    assertSourceConfig(source);
-    assertProcessorConfig(processor);
-    assertDestinationConfig(config?.destination);
+    assertSource(source);
+    assertProcessor(processor);
+    assertDestination(config?.destination);
     assertCompletionConfig(config?.completionConfig);
   } catch (error) {
     return terminateForConfig((error as Error).message, terminationManager);
@@ -139,41 +135,17 @@ async function fireOperationEnd(
   operationInfo: OperationInfo,
   isReplay: boolean,
   status: OperationStatus | undefined,
+  runError: ErrorObject | undefined,
 ): Promise<void> {
   const opError =
     status === OperationStatus.SUCCEEDED
       ? undefined
-      : operationDidNotSucceedError(status);
+      : runDidNotSucceedError(status, runError);
   await plugin.onOperationEnd?.({
     ...operationInfo,
     isReplay,
     ...(opError ? { error: opError } : {}),
   });
-}
-
-/** @internal */
-export function toDistributedMapS3SourceOptions(
-  s3: DistributedMapS3SourceConfig,
-): DistributedMapS3SourceOptions {
-  const wire: DistributedMapS3SourceOptions = { Bucket: s3.bucket };
-  if (s3.key !== undefined) {
-    wire.Key = s3.key;
-  } else {
-    wire.KeyPrefix = s3.prefix;
-    // With a format, the service reads the content of every object under the prefix.
-    wire.Transform = s3.format ? "LOAD_AND_FLATTEN" : "NONE";
-  }
-  if (s3.expectedBucketOwner) wire.ExpectedBucketOwner = s3.expectedBucketOwner;
-  if (s3.format) wire.Format = s3.format;
-  if (s3.format === "CSV") {
-    const headers = s3.csv?.headers;
-    wire.CsvFormatOptions = {
-      HeaderLocation: headers ? "GIVEN" : "FIRST_ROW",
-      ...(headers ? { Headers: [...headers] } : {}),
-      Delimiter: s3.csv?.delimiter ?? "COMMA",
-    };
-  }
-  return wire;
 }
 
 async function serializeInlineItems(
@@ -205,7 +177,7 @@ async function serializeInlineItems(
 }
 
 async function toDistributedMapSourceOptions(
-  source: DistributedMapSourceConfig<unknown> | unknown[],
+  source: DistributedMapSource<unknown> | unknown[],
   defaultS: AnySerdes,
   stepId: string,
   name: string | undefined,
@@ -225,14 +197,15 @@ async function toDistributedMapSourceOptions(
       },
     };
   }
-  if (source.inline) {
+  const def = source.definition;
+  if (def.type === "INLINE") {
     return {
       Type: "INLINE",
-      MaxItemsToRead: source.maxItems,
+      MaxItemsToRead: def.maxItems,
       InlineSourceConfig: {
         Items: await serializeInlineItems(
-          source.inline.items,
-          (source.inline.serdes as AnySerdes | undefined) ?? defaultS,
+          def.items,
+          def.serdes ?? defaultS,
           stepId,
           name,
           context,
@@ -240,27 +213,22 @@ async function toDistributedMapSourceOptions(
       },
     };
   }
-  if (source.s3) {
+  if (def.type === "S3") {
     return {
       Type: "S3",
-      MaxItemsToRead: source.maxItems,
-      S3SourceConfig: toDistributedMapS3SourceOptions(source.s3),
+      MaxItemsToRead: def.maxItems,
+      S3SourceConfig: { ...def.s3 },
     };
   }
-  const reader = source.reader;
-  if (!reader)
-    throw new Error(
-      "Invalid source: must set exactly one of inline, s3 or reader.",
-    );
   const readerConfig: NonNullable<
     DistributedMapSourceOptions["ReaderFunctionSourceConfig"]
   > = {
-    FunctionName: reader.functionName,
+    FunctionName: def.functionName,
   };
-  if (reader.initialState !== undefined && reader.initialState !== null) {
+  if (def.initialState !== undefined && def.initialState !== null) {
     const state = await safeSerialize(
-      reader.stateSerdes ?? defaultS,
-      reader.initialState,
+      def.stateSerdes ?? defaultS,
+      def.initialState,
       stepId,
       name,
       context.terminationManager,
@@ -273,45 +241,8 @@ async function toDistributedMapSourceOptions(
   }
   return {
     Type: "READER_FUNCTION",
-    MaxItemsToRead: source.maxItems,
+    MaxItemsToRead: def.maxItems,
     ReaderFunctionSourceConfig: readerConfig,
-  };
-}
-
-/** @internal */
-export function toDistributedMapProcessorOptions(
-  processor: DistributedMapProcessorConfig,
-): DistributedMapProcessorOptions {
-  const responseTypes: DistributedMapFunctionResponseType[] | undefined =
-    processor.responseMode === "itemFailures"
-      ? ["REPORT_BATCH_ITEM_FAILURES"]
-      : processor.responseMode === "itemResults"
-        ? ["REPORT_BATCH_ITEM_RESULTS"]
-        : undefined;
-  let maxRetryAttempts: number | undefined;
-  let maxRetryDurationSeconds: number | undefined;
-  if (processor.maxRetryAttempts === "unlimited")
-    maxRetryAttempts = UNLIMITED_RETRY_WIRE;
-  else if (typeof processor.maxRetryAttempts === "number")
-    maxRetryAttempts = processor.maxRetryAttempts;
-  if (processor.maxRetryDuration) {
-    maxRetryDurationSeconds = durationToSeconds(processor.maxRetryDuration);
-  }
-  return {
-    FunctionName: processor.functionName,
-    ...(responseTypes ? { FunctionResponseTypes: responseTypes } : {}),
-    ...(processor.batchSize !== undefined
-      ? { BatchSize: processor.batchSize }
-      : {}),
-    ...(maxRetryAttempts !== undefined
-      ? { MaxRetryAttempts: maxRetryAttempts }
-      : {}),
-    ...(maxRetryDurationSeconds !== undefined
-      ? { MaxRetryDurationSeconds: maxRetryDurationSeconds }
-      : {}),
-    ...(processor.durableExecutionNamePrefix !== undefined
-      ? { DurableExecutionNamePrefix: processor.durableExecutionNamePrefix }
-      : {}),
   };
 }
 
@@ -320,49 +251,16 @@ export function toDistributedMapDestinationOptions(
   config: AnyDistributedMapConfig,
 ): DistributedMapDestinationOptions | undefined {
   const dest = config.destination;
-  if (!dest) return undefined;
-  const wire: DistributedMapDestinationOptions = {};
-  if (dest.onSuccess) {
-    const m = dest.onSuccess;
-    const include: DistributedMapDestinationInclude[] = [];
-    if (m.includeInput ?? false) include.push("INPUT");
-    if (m.includeOutput ?? true) include.push("OUTPUT");
-    wire.OnSuccess = {
-      Type: "S3",
-      Include: include,
-      S3DestinationConfig: {
-        Bucket: m.bucket,
-        KeyPrefix: m.prefix,
-        ...(m.expectedBucketOwner
-          ? { ExpectedBucketOwner: m.expectedBucketOwner }
-          : {}),
-      },
-    };
-  }
-  if (dest.onFailure) {
-    const m = dest.onFailure;
-    const include: DistributedMapDestinationInclude[] = [];
-    if (m.includeInput ?? true) include.push("INPUT");
-    if (m.includeError ?? true) include.push("ERROR");
-    wire.OnFailure = {
-      Type: "S3",
-      Include: include,
-      S3DestinationConfig: {
-        Bucket: m.bucket,
-        KeyPrefix: m.prefix,
-        ...(m.expectedBucketOwner
-          ? { ExpectedBucketOwner: m.expectedBucketOwner }
-          : {}),
-      },
-    };
-  }
-  if (!wire.OnSuccess && !wire.OnFailure) return undefined;
-  return wire;
+  if (!dest?.onSuccess && !dest?.onFailure) return undefined;
+  return {
+    ...(dest.onSuccess ? { OnSuccess: dest.onSuccess.options } : {}),
+    ...(dest.onFailure ? { OnFailure: dest.onFailure.options } : {}),
+  };
 }
 
 async function buildOptions(
-  source: DistributedMapSourceConfig<unknown> | unknown[],
-  processor: DistributedMapProcessorConfig,
+  source: DistributedMapSource<unknown> | unknown[],
+  processor: DistributedMapProcessor<unknown>,
   maxConcurrency: number,
   config: AnyDistributedMapConfig,
   defaultS: AnySerdes,
@@ -403,7 +301,7 @@ async function buildOptions(
       name,
       context,
     ),
-    Processor: toDistributedMapProcessorOptions(processor),
+    Processor: { ...processor.options },
     ...(destination ? { Destination: destination } : {}),
     ...(Object.keys(completionWire).length > 0
       ? { CompletionConfig: completionWire }
@@ -420,9 +318,14 @@ async function buildOptions(
 const DISTRIBUTED_MAP_STATUS_SET: ReadonlySet<string> = new Set(
   Object.values(DistributedMapStatus),
 );
-const DISTRIBUTED_MAP_COMPLETION_REASON_SET: ReadonlySet<string> = new Set(
-  DISTRIBUTED_MAP_COMPLETION_REASONS,
-);
+
+/** Builds an Error whose name and stack come from a recorded ErrorObject. */
+function causeFrom(error: ErrorObject): Error {
+  const cause = new Error(error.ErrorMessage);
+  cause.name = error.ErrorType || "Error";
+  cause.stack = error.StackTrace?.join("\n");
+  return cause;
+}
 
 function parseStatus(value: string | undefined): DistributedMapStatus {
   if (value === undefined) {
@@ -435,21 +338,6 @@ function parseStatus(value: string | undefined): DistributedMapStatus {
   }
   // Unrecognized status from backend, don't throw.
   return DistributedMapStatus.UNKNOWN_TO_SDK_VERSION;
-}
-
-function parseReason(
-  value: string | undefined,
-): DistributedMapCompletionReason {
-  if (value === undefined) {
-    throw new DistributedMapError(
-      "missing distributed map completion reason from backend",
-    );
-  }
-  if (DISTRIBUTED_MAP_COMPLETION_REASON_SET.has(value)) {
-    return value as DistributedMapCompletionReason;
-  }
-  // Unrecognized reason from backend, don't throw.
-  return "UNKNOWN_TO_SDK_VERSION";
 }
 
 function parseItemStatus(value: string | undefined): DistributedMapItemStatus {
@@ -480,26 +368,28 @@ export async function buildSummary(
 ): Promise<DistributedMapSummary> {
   // The run status is the operation's own terminal status; details does not carry it.
   const status = parseStatus(operationStatus);
-  const completionReason = parseReason(details.CompletionReason);
   const failureCount = details.FailureCount ?? 0;
   const arn = details.DistributedMapRunArn;
+  const runError = details.Error;
+  // SourceExhausted is required at terminal once the run exists. It is absent only when the
+  // operation failed before a run was created, which is also when the run ARN is absent.
+  if (arn !== undefined && details.SourceExhausted === undefined) {
+    throw new DistributedMapError(
+      "missing distributed map SourceExhausted from backend",
+    );
+  }
 
   const throwRunLevel = (): void => {
     if (status !== DistributedMapStatus.SUCCEEDED) {
-      const detail = details.CompletionDetails
-        ? `, ${details.CompletionDetails}`
-        : "";
-      throw new DistributedMapError(
-        `Map run ended ${status} (reason: ${completionReason}${detail})`,
-      );
+      throw runDidNotSucceedError(status, runError);
     }
   };
 
   const summary: DistributedMapSummary = {
     distributedMapRunArn: arn,
     status,
-    completionReason,
-    completionDetails: details.CompletionDetails,
+    sourceExhausted: details.SourceExhausted,
+    error: runError,
     hasFailure: failureCount > 0,
     successCount: details.SuccessCount ?? 0,
     failureCount,
@@ -532,12 +422,9 @@ export async function buildSummary(
     }
     let error: DistributedMapItemError | undefined;
     if (wire.Error) {
-      const cause = new Error(wire.Error.ErrorMessage);
-      cause.name = wire.Error.ErrorType || "Error";
-      cause.stack = wire.Error.StackTrace?.join("\n");
       error = new DistributedMapItemError(
         wire.Error.ErrorMessage,
-        cause,
+        causeFrom(wire.Error),
         wire.Error.ErrorData,
       );
     }
@@ -610,50 +497,50 @@ export const createDistributedMapHandler = (
   plugin: DurableInstrumentationPlugin = {},
 ): {
   <TItem, TOutput>(
-    source: DistributedMapSourceConfig<TItem> | TItem[],
-    processor: DistributedMapProcessorConfig,
+    source: DistributedMapSource<TItem> | TItem[],
+    processor: DistributedMapProcessor<TOutput>,
     maxConcurrency: number,
     config: DistributedMapConfig<TOutput> & { collectResults: true },
   ): DurablePromise<DistributedMapResult<TOutput>>;
   <TItem, TOutput>(
     name: string | undefined,
-    source: DistributedMapSourceConfig<TItem> | TItem[],
-    processor: DistributedMapProcessorConfig,
+    source: DistributedMapSource<TItem> | TItem[],
+    processor: DistributedMapProcessor<TOutput>,
     maxConcurrency: number,
     config: DistributedMapConfig<TOutput> & { collectResults: true },
   ): DurablePromise<DistributedMapResult<TOutput>>;
   <TItem, TOutput>(
-    source: DistributedMapSourceConfig<TItem> | TItem[],
-    processor: DistributedMapProcessorConfig,
+    source: DistributedMapSource<TItem> | TItem[],
+    processor: DistributedMapProcessor<TOutput>,
     maxConcurrency: number,
     config?: DistributedMapConfig<TOutput>,
   ): DurablePromise<DistributedMapSummary>;
   <TItem, TOutput>(
     name: string | undefined,
-    source: DistributedMapSourceConfig<TItem> | TItem[],
-    processor: DistributedMapProcessorConfig,
+    source: DistributedMapSource<TItem> | TItem[],
+    processor: DistributedMapProcessor<TOutput>,
     maxConcurrency: number,
     config?: DistributedMapConfig<TOutput>,
   ): DurablePromise<DistributedMapSummary>;
 } => {
   function distributedMapHandler<TItem, TOutput>(
-    arg0: string | undefined | DistributedMapSourceConfig<TItem> | TItem[],
+    arg0: string | undefined | DistributedMapSource<TItem> | TItem[],
     arg1:
-      | DistributedMapSourceConfig<TItem>
+      | DistributedMapSource<TItem>
       | TItem[]
-      | DistributedMapProcessorConfig,
-    arg2: DistributedMapProcessorConfig | number,
+      | DistributedMapProcessor<TOutput>,
+    arg2: DistributedMapProcessor<TOutput> | number,
     arg3?: number | AnyDistributedMapConfig,
     arg4?: AnyDistributedMapConfig,
   ): DurablePromise<DistributedMapSummary | DistributedMapResult<TOutput>> {
     const isNameFirst = typeof arg0 === "string" || arg0 === undefined;
     const name = isNameFirst ? (arg0 as string | undefined) : undefined;
     const source = (isNameFirst ? arg1 : arg0) as
-      | DistributedMapSourceConfig<TItem>
+      | DistributedMapSource<TItem>
       | TItem[];
     const processor = (
       isNameFirst ? arg2 : arg1
-    ) as DistributedMapProcessorConfig;
+    ) as DistributedMapProcessor<TOutput>;
     const maxConcurrency = (isNameFirst ? arg3 : arg2) as number;
     const config = (isNameFirst ? arg4 : arg3) as
       | AnyDistributedMapConfig
@@ -734,6 +621,7 @@ export const createDistributedMapHandler = (
           operationInfo,
           !updated,
           stepData?.Status,
+          stepData?.DistributedMapDetails?.Error,
         );
         isCompleted = true;
         return;
@@ -741,7 +629,7 @@ export const createDistributedMapHandler = (
 
       if (!stepData) {
         const options = await buildOptions(
-          source as DistributedMapSourceConfig<unknown> | unknown[],
+          source as DistributedMapSource<unknown> | unknown[],
           processor,
           maxConcurrency,
           resolvedConfig,
@@ -827,7 +715,13 @@ export const createDistributedMapHandler = (
       const stepData = context.getStepData(stepId);
       const operationInfo = toOperationInfo(stepData);
       backfillOperationInfo(operationInfo, opInfo);
-      await fireOperationEnd(plugin, operationInfo, false, stepData?.Status);
+      await fireOperationEnd(
+        plugin,
+        operationInfo,
+        false,
+        stepData?.Status,
+        stepData?.DistributedMapDetails?.Error,
+      );
 
       return resolve();
     });

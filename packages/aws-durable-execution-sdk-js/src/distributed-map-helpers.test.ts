@@ -6,6 +6,7 @@ import {
   createDistributedMapBatchHandlerWithDurableExecution,
 } from "./distributed-map-helpers";
 import { BatchItemStatus } from "./types";
+import { DistributedMapError } from "./errors/durable-error/durable-error";
 import { Serdes } from "./utils/serdes/serdes";
 import { Context } from "aws-lambda";
 
@@ -162,23 +163,34 @@ describe("createDistributedMapItemHandler serdes split", () => {
     ]);
   });
 
-  it("reports only failures when report is 'failures'", async () => {
-    const handler = createDistributedMapItemHandler<number, number>(
-      (item) => item,
-      {
-        report: "failures",
-      },
-    );
-    const res = await handler(event([{ itemId: "0", body: 1 }]), ctx);
-    expect(res).toEqual({ batchItemFailures: [] });
+  it("reports a thrown error's errorData", async () => {
+    const handler = createDistributedMapItemHandler<number, number>(() => {
+      throw new DistributedMapError("bad item", undefined, '{"id":7}');
+    });
+    const res = await handler(event([{ itemId: "7", body: 1 }]), ctx);
+    expect(res.batchItemFailures[0].error).toEqual({
+      errorType: "DistributedMapError",
+      errorMessage: "bad item",
+      errorData: '{"id":7}',
+    });
   });
 
-  it("rejects an invalid report value at construction", () => {
-    expect(() =>
-      createDistributedMapItemHandler<number, number>((i) => i, {
-        report: "bogus" as any,
-      }),
-    ).toThrow(/results.*failures/);
+  it("reports both results and failures in one response", async () => {
+    const handler = createDistributedMapItemHandler<number, number>((item) => {
+      if (item === 2) throw new Error("boom");
+      return item;
+    });
+    const res = await handler(
+      event([
+        { itemId: "0", body: 1 },
+        { itemId: "1", body: 2 },
+      ]),
+      ctx,
+    );
+    expect(res.batchItemResults).toEqual([
+      { itemIdentifier: "0", output: "1" },
+    ]);
+    expect(res.batchItemFailures.map((f) => f.itemIdentifier)).toEqual(["1"]);
   });
 
   it("rejects an event that is not a processor payload", async () => {
@@ -203,14 +215,12 @@ describe("createDistributedMapItemHandler thrown non-error and empty output", ()
     ]);
   });
 
-  it("produces output null when the fn returns undefined and does not throw", async () => {
+  it("lists an item with no output when the fn returns undefined", async () => {
     const handler = createDistributedMapItemHandler<number, number | undefined>(
       () => undefined,
     );
     const res = await handler(event([{ itemId: "0", body: 1 }]), ctx);
-    expect(res.batchItemResults).toEqual([
-      { itemIdentifier: "0", output: null },
-    ]);
+    expect(res.batchItemResults).toEqual([{ itemIdentifier: "0" }]);
     expect(res.batchItemFailures).toEqual([]);
   });
 
@@ -385,6 +395,25 @@ describe("distributed map durable variants", () => {
     expect(res.batchItemFailures).toEqual([]);
   });
 
+  it("lists an item with no output when the durable fn returns undefined", async () => {
+    const handler = createDistributedMapItemHandlerWithDurableExecution<
+      number,
+      number | undefined
+    >((_ctx, item) => (item === 2 ? undefined : item));
+    const res = (await handler(
+      event([
+        { itemId: "0", body: 1 },
+        { itemId: "1", body: 2 },
+      ]) as any,
+      durableCtx,
+    )) as any;
+    expect(res.batchItemResults).toEqual([
+      { itemIdentifier: "0", output: "1" },
+      { itemIdentifier: "1" },
+    ]);
+    expect(res.batchItemFailures).toEqual([]);
+  });
+
   it("captures a failed item while succeeding the rest", async () => {
     const handler = createDistributedMapItemHandlerWithDurableExecution<
       number,
@@ -432,18 +461,6 @@ describe("distributed map durable variants", () => {
     ]);
     expect(res.batchItemFailures).toHaveLength(1);
     expect(res.batchItemFailures[0].itemIdentifier).toBe("1");
-  });
-
-  it("reports only failures when the durable item handler uses report 'failures'", async () => {
-    const handler = createDistributedMapItemHandlerWithDurableExecution<
-      number,
-      number
-    >((_ctx, item) => item, { report: "failures" });
-    const res = (await handler(
-      event([{ itemId: "0", body: 1 }]) as any,
-      durableCtx,
-    )) as any;
-    expect(res).toEqual({ batchItemFailures: [] });
   });
 
   it.each([
