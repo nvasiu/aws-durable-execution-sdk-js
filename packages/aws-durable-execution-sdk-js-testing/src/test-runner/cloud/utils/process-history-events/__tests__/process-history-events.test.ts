@@ -721,4 +721,16 @@ describe("historyEventsToOperationEvents", () => {
       `Details missing for event "step-1"`,
     );
   });
+
+  it("should throw a not-supported error for an unknown event type", () => {
+    const event = {
+      EventType: "DistributedMapStarted",
+      Id: "dmap-1",
+      EventTimestamp: mockTimestamp,
+    } as unknown as Event;
+
+    expect(() => historyEventsToOperationEvents([event])).toThrow(
+      `Unsupported event type "DistributedMapStarted" for event "dmap-1". Distributed map is not supported by the testing library yet.`,
+    );
+  });
 });

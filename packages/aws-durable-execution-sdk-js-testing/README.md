@@ -27,6 +27,8 @@ This package provides testing tools for durable functions both locally and in th
   - **Operation inspection** - View detailed operation tables and execution history
   - **Time control** - Skip time for fast testing or use real timing for validation
 
+> **Note:** Distributed map (`context.distributedMap`) is not supported by the testing library yet. Both runners throw a "not supported" error when they reach a distributed map operation.
+
 ## Installation
 
 ```bash

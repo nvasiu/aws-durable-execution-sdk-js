@@ -280,6 +280,36 @@ export function createClassSerdes<T extends object>(cls: new () => T): Serdes<T>
 // @beta
 export function createClassSerdesWithDates<T extends object>(cls: new () => T, dateProps: string[]): Serdes<T>;
 
+// @public
+export function createDistributedMapBatchHandler<TItem>(fn: (items: TItem[]) => void | Promise<void>, opts?: {
+    itemSerdes?: Serdes<TItem>;
+}): (event: unknown, context: Context) => Promise<void>;
+
+// @public
+export function createDistributedMapBatchHandlerWithDurableExecution<TItem>(fn: (context: DurableContext, items: TItem[]) => void | Promise<void>, opts?: {
+    itemSerdes?: Serdes<TItem>;
+}): DurableLambdaHandler;
+
+// @public
+export function createDistributedMapItemHandler<TItem, TOutput>(fn: (item: TItem) => TOutput | Promise<TOutput>, opts?: {
+    itemSerdes?: Serdes<TItem>;
+    resultSerdes?: Serdes<TOutput>;
+    concurrency?: number;
+    report?: "results" | "failures";
+}): (event: unknown, context: Context) => Promise<Record<string, unknown>>;
+
+// @public
+export function createDistributedMapItemHandlerWithDurableExecution<TItem, TOutput>(fn: (context: DurableContext, item: TItem) => TOutput | Promise<TOutput>, opts?: {
+    itemSerdes?: Serdes<TItem>;
+    resultSerdes?: Serdes<TOutput>;
+    report?: "results" | "failures";
+}): DurableLambdaHandler;
+
+// @public
+export function createDistributedMapReader<TItem, TState>(fn: (state: TState | undefined) => ReaderPage<TItem, TState> | Promise<ReaderPage<TItem, TState>>, opts?: {
+    stateSerdes?: Serdes<TState>;
+}): (event: unknown, context: Context) => Promise<Record<string, unknown>>;
+
 // Warning: (ae-incompatible-release-tags) The symbol "createFileSystemSerdes" is marked as @public, but its signature references "AnySerdes" which is marked as @internal
 //
 // @public
@@ -293,6 +323,19 @@ export const createRetryStrategy: (config?: RetryStrategyConfig) => (error: Erro
 
 // @public (undocumented)
 export const createWaitStrategy: <T>(config: WaitStrategyConfig<T>) => (result: T, attemptsMade: number) => WaitForConditionDecision;
+
+// @public
+export type CsvDelimiter = "COMMA" | "PIPE" | "SEMICOLON" | "SPACE" | "TAB";
+
+// @public
+interface CsvFormatOptionsWire {
+    // (undocumented)
+    Delimiter?: string;
+    // (undocumented)
+    HeaderLocation?: "FIRST_ROW" | "GIVEN";
+    // (undocumented)
+    Headers?: string[];
+}
 
 // @public
 export interface CustomCompletionConfig {
@@ -313,6 +356,425 @@ type CustomerFnResult = unknown;
 // @public
 export const defaultSerdes: Serdes<any>;
 
+// @public
+const DISTRIBUTED_MAP_COMPLETION_REASONS: readonly ["ALL_COMPLETED", "ITEM_LIMIT_REACHED", "STOPPED", "TIMED_OUT", "FAILURE_TOLERANCE_EXCEEDED", "SOURCE_FAILED", "DESTINATION_FAILED", "INLINE_RESULT_LIMIT_EXCEEDED", "INVALID_CONFIGURATION", "QUOTA_EXCEEDED", "KMS_ACCESS_DENIED", "INTERNAL_ERROR", "UNKNOWN_TO_SDK_VERSION"];
+
+// @public
+const DISTRIBUTED_MAP_STATUSES: readonly ["SUCCEEDED", "FAILED", "STOPPED", "TIMED_OUT"];
+
+// @public
+export type DistributedMapCompletionConfig = {
+    toleratedFailureCount: number;
+    toleratedFailurePercentage?: never;
+    minimumSampleSize?: never;
+} | {
+    toleratedFailurePercentage: number;
+    minimumSampleSize?: number;
+    toleratedFailureCount?: never;
+};
+
+// @public
+interface DistributedMapCompletionConfigWire {
+    // (undocumented)
+    MinimumSampleSize?: number;
+    // (undocumented)
+    ToleratedFailureCount?: number;
+    // (undocumented)
+    ToleratedFailurePercentage?: number;
+}
+
+// Warning: (ae-forgotten-export) The symbol "DISTRIBUTED_MAP_COMPLETION_REASONS" needs to be exported by the entry point index.d.ts
+//
+// @public
+export type DistributedMapCompletionReason = (typeof DISTRIBUTED_MAP_COMPLETION_REASONS)[number];
+
+// @public
+export interface DistributedMapConfig<TOutput> {
+    // (undocumented)
+    collectResults?: boolean;
+    // (undocumented)
+    completionConfig?: DistributedMapCompletionConfig;
+    // (undocumented)
+    destination?: DistributedMapDestinationConfig;
+    // (undocumented)
+    resultSerdes?: Serdes<TOutput>;
+    // (undocumented)
+    timeout?: Duration;
+}
+
+// @public
+export const DistributedMapDestination: {
+    s3: {
+        successes(uri: string, opts?: {
+            includeInput?: boolean;
+            includeOutput?: boolean;
+            expectedBucketOwner?: string;
+        }): SuccessDestination;
+        failures(uri: string, opts?: {
+            includeInput?: boolean;
+            includeError?: boolean;
+            expectedBucketOwner?: string;
+        }): FailureDestination;
+    };
+};
+
+// @public
+export interface DistributedMapDestinationConfig {
+    // (undocumented)
+    onFailure?: FailureDestination;
+    // (undocumented)
+    onSuccess?: SuccessDestination;
+}
+
+// @public
+interface DistributedMapDestinationEntryWire {
+    // Warning: (ae-forgotten-export) The symbol "DistributedMapDestinationIncludeWire" needs to be exported by the entry point index.d.ts
+    //
+    // (undocumented)
+    Include: DistributedMapDestinationIncludeWire[];
+    // Warning: (ae-forgotten-export) The symbol "S3DestinationConfigWire" needs to be exported by the entry point index.d.ts
+    //
+    // (undocumented)
+    S3DestinationConfig: S3DestinationConfigWire;
+    // (undocumented)
+    Type: "S3";
+}
+
+// @public
+type DistributedMapDestinationIncludeWire = "INPUT" | "OUTPUT" | "ERROR";
+
+// @internal
+interface DistributedMapDestinationModel {
+    // (undocumented)
+    bucket: string;
+    // (undocumented)
+    expectedBucketOwner?: string;
+    // (undocumented)
+    includeError?: boolean;
+    // (undocumented)
+    includeInput?: boolean;
+    // (undocumented)
+    includeOutput?: boolean;
+    // (undocumented)
+    keyPrefix: string;
+}
+
+// @public
+interface DistributedMapDestinationWire {
+    // (undocumented)
+    OnFailure?: DistributedMapDestinationEntryWire;
+    // Warning: (ae-forgotten-export) The symbol "DistributedMapDestinationEntryWire" needs to be exported by the entry point index.d.ts
+    //
+    // (undocumented)
+    OnSuccess?: DistributedMapDestinationEntryWire;
+}
+
+// @public
+interface DistributedMapDetails {
+    CompletionDetails?: string | undefined;
+    CompletionReason?: string | undefined;
+    DistributedMapRunArn?: string | undefined;
+    FailureCount?: number | undefined;
+    // Warning: (ae-forgotten-export) The symbol "DistributedMapResultItemWire" needs to be exported by the entry point index.d.ts
+    Results?: DistributedMapResultItemWire[] | undefined;
+    Status?: string | undefined;
+    SuccessCount?: number | undefined;
+    TotalCount?: number | undefined;
+    UnprocessedCount?: number | undefined;
+}
+
+// @public
+export class DistributedMapError extends DurableOperationError {
+    constructor(message?: string, cause?: Error, errorData?: string);
+    // (undocumented)
+    readonly errorType = "DistributedMapError";
+}
+
+// @public
+type DistributedMapFunctionResponseTypeWire = "REPORT_BATCH_ITEM_FAILURES" | "REPORT_BATCH_ITEM_RESULTS";
+
+// @public
+export interface DistributedMapItemError {
+    // (undocumented)
+    errorMessage: string;
+    // (undocumented)
+    errorType: string;
+}
+
+// @public
+interface DistributedMapOptions {
+    // Warning: (ae-forgotten-export) The symbol "DistributedMapCompletionConfigWire" needs to be exported by the entry point index.d.ts
+    //
+    // (undocumented)
+    CompletionConfig?: DistributedMapCompletionConfigWire;
+    // Warning: (ae-forgotten-export) The symbol "DistributedMapDestinationWire" needs to be exported by the entry point index.d.ts
+    //
+    // (undocumented)
+    Destination?: DistributedMapDestinationWire;
+    // (undocumented)
+    MaxConcurrency: number;
+    // Warning: (ae-forgotten-export) The symbol "DistributedMapProcessorWire" needs to be exported by the entry point index.d.ts
+    //
+    // (undocumented)
+    Processor: DistributedMapProcessorWire;
+    // Warning: (ae-forgotten-export) The symbol "DistributedMapResultCollectionWire" needs to be exported by the entry point index.d.ts
+    //
+    // (undocumented)
+    ResultCollection?: DistributedMapResultCollectionWire;
+    // Warning: (ae-forgotten-export) The symbol "DistributedMapSourceWire" needs to be exported by the entry point index.d.ts
+    //
+    // (undocumented)
+    Source: DistributedMapSourceWire;
+    // (undocumented)
+    TimeoutSeconds?: number;
+}
+
+// @public
+export interface DistributedMapProcessor<TOutput> {
+    // @internal
+    readonly __output?: TOutput;
+    // Warning: (ae-forgotten-export) The symbol "DistributedMapProcessorModel" needs to be exported by the entry point index.d.ts
+    //
+    // @internal (undocumented)
+    readonly model: DistributedMapProcessorModel;
+}
+
+// @public
+export const DistributedMapProcessor: {
+    reportBatchOutcome(functionName: string, opts?: {
+        batchSize?: number;
+        retry?: ProcessorRetryConfig;
+        durableExecutionNamePrefix?: string;
+    }): DistributedMapProcessor<never>;
+    reportFailedItems(functionName: string, opts?: {
+        batchSize?: number;
+        retry?: ProcessorRetryConfig;
+        durableExecutionNamePrefix?: string;
+    }): DistributedMapProcessor<never>;
+    reportItemResults<TOutput>(functionName: string, opts?: {
+        batchSize?: number;
+        retry?: ProcessorRetryConfig;
+        durableExecutionNamePrefix?: string;
+    }): DistributedMapProcessor<TOutput>;
+};
+
+// @internal
+interface DistributedMapProcessorModel {
+    // (undocumented)
+    batchSize?: number;
+    // (undocumented)
+    durableExecutionNamePrefix?: string;
+    // (undocumented)
+    functionName: string;
+    // (undocumented)
+    responseMode: "batchOutcome" | "failedItems" | "itemResults";
+    // (undocumented)
+    retry?: ProcessorRetryConfig;
+}
+
+// @public
+interface DistributedMapProcessorWire {
+    // (undocumented)
+    BatchSize?: number;
+    // (undocumented)
+    DurableExecutionNamePrefix?: string;
+    // (undocumented)
+    FunctionName: string;
+    // Warning: (ae-forgotten-export) The symbol "DistributedMapFunctionResponseTypeWire" needs to be exported by the entry point index.d.ts
+    //
+    // (undocumented)
+    FunctionResponseTypes?: DistributedMapFunctionResponseTypeWire[];
+    // (undocumented)
+    MaxRetryAttempts?: number;
+    // (undocumented)
+    MaxRetryDurationSeconds?: number;
+}
+
+// @public
+export interface DistributedMapResult<TOutput> extends DistributedMapSummary {
+    // (undocumented)
+    all: Array<DistributedMapResultItem<TOutput>>;
+    // (undocumented)
+    failed(): Array<DistributedMapResultItem<TOutput> & {
+        status: "FAILED";
+    }>;
+    // (undocumented)
+    getErrors(): Array<DistributedMapItemError>;
+    // (undocumented)
+    getResults(): Array<TOutput>;
+    // (undocumented)
+    succeeded(): Array<DistributedMapResultItem<TOutput> & {
+        status: "SUCCEEDED";
+    }>;
+}
+
+// @public
+interface DistributedMapResultCollectionWire {
+    // (undocumented)
+    Mode: "NONE" | "INLINE";
+}
+
+// @public
+export interface DistributedMapResultItem<TOutput> {
+    // (undocumented)
+    error?: DistributedMapItemError;
+    // (undocumented)
+    itemId: string;
+    // (undocumented)
+    output?: TOutput;
+    // (undocumented)
+    status: "SUCCEEDED" | "FAILED";
+}
+
+// @public
+interface DistributedMapResultItemWire {
+    Error?: ErrorObject | undefined;
+    ItemId?: string | undefined;
+    Output?: unknown;
+    Status?: string | undefined;
+}
+
+// @public
+export interface DistributedMapSource<TItem> {
+    // @internal
+    readonly __item?: TItem;
+    // Warning: (ae-forgotten-export) The symbol "DistributedMapSourceModel" needs to be exported by the entry point index.d.ts
+    //
+    // @internal (undocumented)
+    readonly model: DistributedMapSourceModel;
+}
+
+// @public
+export const DistributedMapSource: {
+    inline<T>(items: T[], opts?: {
+        serdes?: Serdes<T>;
+        maxItems?: number;
+    }): DistributedMapSource<T>;
+    s3: {
+        jsonLines<T = unknown>(uri: string, opts?: {
+            expectedBucketOwner?: string;
+            maxItems?: number;
+        }): DistributedMapSource<T>;
+        jsonArray<T = unknown>(uri: string, opts?: {
+            expectedBucketOwner?: string;
+            maxItems?: number;
+        }): DistributedMapSource<T>;
+        csv<T = Record<string, string | null>>(uri: string, opts?: {
+            headers?: string[];
+            expectedColumns?: string[];
+            delimiter?: CsvDelimiter;
+            expectedBucketOwner?: string;
+            maxItems?: number;
+        }): DistributedMapSource<T>;
+        objects<T = unknown>(prefixUri: string, opts?: {
+            expectedBucketOwner?: string;
+            maxItems?: number;
+        }): DistributedMapSource<T>;
+        flattenedJsonLines<T = unknown>(prefixUri: string, opts?: {
+            expectedBucketOwner?: string;
+            maxItems?: number;
+        }): DistributedMapSource<T>;
+        flattenedJsonArray<T = unknown>(prefixUri: string, opts?: {
+            expectedBucketOwner?: string;
+            maxItems?: number;
+        }): DistributedMapSource<T>;
+        flattenedCsv<T = Record<string, string | null>>(prefixUri: string, opts?: {
+            headers?: string[];
+            expectedColumns?: string[];
+            delimiter?: CsvDelimiter;
+            expectedBucketOwner?: string;
+            maxItems?: number;
+        }): DistributedMapSource<T>;
+    };
+    reader: {
+        fromFunction<TItem = unknown, TState = unknown>(functionName: string, opts?: {
+            initialState?: TState;
+            stateSerdes?: Serdes<TState>;
+            maxItems?: number;
+        }): DistributedMapSource<TItem>;
+    };
+};
+
+// @internal
+interface DistributedMapSourceModel {
+    // (undocumented)
+    inlineItems?: unknown[];
+    // (undocumented)
+    inlineSerdes?: AnySerdes;
+    // (undocumented)
+    maxItems?: number;
+    // (undocumented)
+    reader?: {
+        functionName: string;
+        initialState?: unknown;
+        stateSerdes?: AnySerdes;
+    };
+    // (undocumented)
+    s3?: {
+        bucket: string;
+        path: string;
+        scope: "object" | "prefix";
+        format?: "JSON_LINES" | "JSON_ARRAY" | "CSV";
+        flatten?: boolean;
+        headers?: string[];
+        expectedColumns?: string[];
+        delimiter?: CsvDelimiter;
+        expectedBucketOwner?: string;
+    };
+    // (undocumented)
+    type: "INLINE" | "S3" | "READER_FUNCTION";
+}
+
+// @public
+interface DistributedMapSourceWire {
+    // Warning: (ae-forgotten-export) The symbol "InlineSourceConfigWire" needs to be exported by the entry point index.d.ts
+    //
+    // (undocumented)
+    InlineSourceConfig?: InlineSourceConfigWire;
+    // (undocumented)
+    MaxItemsToRead?: number;
+    // Warning: (ae-forgotten-export) The symbol "ReaderFunctionSourceConfigWire" needs to be exported by the entry point index.d.ts
+    //
+    // (undocumented)
+    ReaderFunctionSourceConfig?: ReaderFunctionSourceConfigWire;
+    // Warning: (ae-forgotten-export) The symbol "S3SourceConfigWire" needs to be exported by the entry point index.d.ts
+    //
+    // (undocumented)
+    S3SourceConfig?: S3SourceConfigWire;
+    // (undocumented)
+    Type: "INLINE" | "S3" | "READER_FUNCTION";
+}
+
+// Warning: (ae-forgotten-export) The symbol "DISTRIBUTED_MAP_STATUSES" needs to be exported by the entry point index.d.ts
+//
+// @public
+export type DistributedMapStatus = (typeof DISTRIBUTED_MAP_STATUSES)[number];
+
+// @public
+export interface DistributedMapSummary {
+    // (undocumented)
+    completionDetails?: string;
+    // (undocumented)
+    completionReason: DistributedMapCompletionReason;
+    // (undocumented)
+    distributedMapId?: string;
+    // (undocumented)
+    distributedMapRunArn?: string;
+    // (undocumented)
+    failureCount: number;
+    // (undocumented)
+    hasFailure: boolean;
+    // (undocumented)
+    status: DistributedMapStatus;
+    // (undocumented)
+    successCount: number;
+    throwIfError(): void;
+    // (undocumented)
+    totalCount?: number;
+    // (undocumented)
+    unprocessedCount: number;
+}
+
 // @beta
 export const DURABLE_INSTRUMENTATION_PLUGIN_API_VERSION = 1;
 
@@ -325,6 +787,8 @@ export interface DurableContext<TLogger extends DurableLogger = DurableLogger> {
     // Warning: (ae-forgotten-export) The symbol "CreateCallbackResult" needs to be exported by the entry point index.d.ts
     createCallback<TOutput = string>(name: string | undefined, config?: CreateCallbackConfig<TOutput>): DurablePromise<CreateCallbackResult<TOutput>>;
     createCallback<TOutput = string>(config?: CreateCallbackConfig<TOutput>): DurablePromise<CreateCallbackResult<TOutput>>;
+    distributedMap<TItem, TOutput>(name: string | undefined, source: DistributedMapSource<TItem> | TItem[], processor: DistributedMapProcessor<TOutput>, maxConcurrency: number, config?: DistributedMapConfig<TOutput>): DurablePromise<DistributedMapSummary | DistributedMapResult<TOutput>>;
+    distributedMap<TItem, TOutput>(source: DistributedMapSource<TItem> | TItem[], processor: DistributedMapProcessor<TOutput>, maxConcurrency: number, config?: DistributedMapConfig<TOutput>): DurablePromise<DistributedMapSummary | DistributedMapResult<TOutput>>;
     executionContext: {
         readonly durableExecutionArn: string;
     };
@@ -619,6 +1083,16 @@ export interface ExecutionDetails {
 }
 
 // @public
+export interface FailureDestination {
+    // @internal
+    readonly __kind?: "failure";
+    // Warning: (ae-forgotten-export) The symbol "DistributedMapDestinationModel" needs to be exported by the entry point index.d.ts
+    //
+    // @internal (undocumented)
+    readonly model: DistributedMapDestinationModel;
+}
+
+// @public
 export enum FieldMatchMode {
     ANYWHERE = "ANYWHERE",
     PATH = "PATH"
@@ -659,6 +1133,12 @@ export interface GetDurableExecutionStateRequest {
 export interface GetDurableExecutionStateResponse {
     NextMarker?: string | undefined;
     Operations: WireOperation[] | undefined;
+}
+
+// @public
+interface InlineSourceConfigWire {
+    // (undocumented)
+    Items: unknown[];
 }
 
 // @public
@@ -774,6 +1254,8 @@ export interface Operation {
     CallbackDetails?: CallbackDetails | undefined;
     ChainedInvokeDetails?: ChainedInvokeDetails | undefined;
     ContextDetails?: ContextDetails | undefined;
+    // Warning: (ae-forgotten-export) The symbol "DistributedMapDetails" needs to be exported by the entry point index.d.ts
+    DistributedMapDetails?: DistributedMapDetails | undefined;
     EndTimestamp?: Date | undefined;
     ExecutionDetails?: ExecutionDetails | undefined;
     Id: string | undefined;
@@ -866,6 +1348,7 @@ export type OperationStatus = (typeof OperationStatus)[keyof typeof OperationSta
 export enum OperationSubType {
     CALLBACK = "Callback",
     CHAINED_INVOKE = "ChainedInvoke",
+    DISTRIBUTED_MAP = "DistributedMap",
     MAP = "Map",
     MAP_ITERATION = "MapIteration",
     PARALLEL = "Parallel",
@@ -882,6 +1365,7 @@ export const OperationType: {
     readonly CALLBACK: "CALLBACK";
     readonly CHAINED_INVOKE: "CHAINED_INVOKE";
     readonly CONTEXT: "CONTEXT";
+    readonly DISTRIBUTED_MAP: "DISTRIBUTED_MAP";
     readonly EXECUTION: "EXECUTION";
     readonly STEP: "STEP";
     readonly WAIT: "WAIT";
@@ -896,6 +1380,8 @@ export interface OperationUpdate {
     CallbackOptions?: CallbackOptions | undefined;
     ChainedInvokeOptions?: ChainedInvokeOptions | undefined;
     ContextOptions?: ContextOptions | undefined;
+    // Warning: (ae-forgotten-export) The symbol "DistributedMapOptions" needs to be exported by the entry point index.d.ts
+    DistributedMapOptions?: DistributedMapOptions | undefined;
     Error?: ErrorObject | undefined;
     Id: string | undefined;
     Name?: string | undefined;
@@ -974,10 +1460,32 @@ export enum PreviewMode {
 }
 
 // @public
+export interface ProcessorRetryConfig {
+    maxRetryAttempts?: number | "unlimited";
+    maxRetryDuration?: Duration;
+}
+
+// @public
 export class PromiseCombinatorError extends DurableOperationError {
     constructor(message?: string, cause?: Error, errorData?: string);
     // (undocumented)
     readonly errorType = "PromiseCombinatorError";
+}
+
+// @public
+interface ReaderFunctionSourceConfigWire {
+    // (undocumented)
+    FunctionName: string;
+    // (undocumented)
+    InitialState?: string;
+}
+
+// @public
+export interface ReaderPage<TItem, TState> {
+    // (undocumented)
+    items: TItem[];
+    // (undocumented)
+    nextState?: TState;
 }
 
 // @public
@@ -1008,6 +1516,36 @@ export interface RetryStrategyConfig {
     maxDelay?: Duration;
     retryableErrors?: (string | RegExp)[];
     retryableErrorTypes?: (new () => Error)[];
+}
+
+// @public
+interface S3DestinationConfigWire {
+    // (undocumented)
+    Bucket: string;
+    // (undocumented)
+    ExpectedBucketOwner?: string;
+    // (undocumented)
+    KeyPrefix: string;
+}
+
+// @public
+interface S3SourceConfigWire {
+    // (undocumented)
+    Bucket: string;
+    // Warning: (ae-forgotten-export) The symbol "CsvFormatOptionsWire" needs to be exported by the entry point index.d.ts
+    //
+    // (undocumented)
+    CsvFormatOptions?: CsvFormatOptionsWire;
+    // (undocumented)
+    ExpectedBucketOwner?: string;
+    // (undocumented)
+    Format?: "JSON_LINES" | "JSON_ARRAY" | "CSV";
+    // (undocumented)
+    Key?: string;
+    // (undocumented)
+    KeyPrefix?: string;
+    // (undocumented)
+    Transform?: "NONE" | "LOAD_AND_FLATTEN";
 }
 
 // Warning: (ae-internal-missing-underscore) The name "SDK_VERSION" should be prefixed with an underscore because the declaration is marked as @internal
@@ -1083,6 +1621,14 @@ export interface StepOptions {
 export enum StepSemantics {
     AtLeastOncePerRetry = "AT_LEAST_ONCE_PER_RETRY",
     AtMostOncePerRetry = "AT_MOST_ONCE_PER_RETRY"
+}
+
+// @public
+export interface SuccessDestination {
+    // @internal
+    readonly __kind?: "success";
+    // @internal (undocumented)
+    readonly model: DistributedMapDestinationModel;
 }
 
 // @public

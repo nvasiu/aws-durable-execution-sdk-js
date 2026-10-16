@@ -101,5 +101,16 @@ describe("validateValidActionsByOperationType", () => {
         );
       }).toThrow("Unknown operation type.");
     });
+
+    it("should throw a not-supported error for DISTRIBUTED_MAP", () => {
+      expect(() => {
+        validateValidActionsByOperationType(
+          OperationType.DISTRIBUTED_MAP,
+          OperationAction.START,
+        );
+      }).toThrow(
+        "Distributed map is not supported by the testing library yet.",
+      );
+    });
   });
 });
